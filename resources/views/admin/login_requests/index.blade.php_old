@@ -1,0 +1,117 @@
+@extends('layouts.master')
+
+@section('title') Login Authority @endsection
+
+@section('content')
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0 font-size-18">Login Authority</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card border">
+                <div class="card-body">
+                    <table id="data-table" class="table table-bordered dt-responsive nowrap w-100">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Date & Time</th>
+                                <th width="130px;">Status</th>
+                                <th width="130px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@section('script')
+    <script type="text/javascript">
+        $(function() {
+            $(document).on('click', '.change-status-btn', function (e) {
+                e.preventDefault();
+                const { id, status } = $(this).data();
+                const $btns = $('.change-status-btn');
+
+                $.ajax({
+                    dataType: 'json',
+                    type: 'POST',
+                    url: "{{ route('admin.login_requests.status.update') }}",
+                    data: {
+                        id,
+                        status,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    beforeSend: () => {
+                        $btns.prop('disabled', true);
+                        showToastr();
+                    },
+                    error: (jqXHR, exception) => {
+                        $btns.prop('disabled', false);
+                        showToastr('error', formatErrorMessage(jqXHR, exception));
+                    },
+                    success: response => {
+                        $btns.prop('disabled', false);
+                        showToastr('success', response.message);
+
+                        reloadTable('data-table');
+                    }
+                });
+            })
+
+            $('#data-table').DataTable({
+                aaSorting: [[2, 'desc']],
+                ajax: '{{ route("admin.login_requests.list") }}',
+                dom: DT_DOM_OPTION,
+                buttons: DT_BUTTONS_OPTION,
+                columns : [
+                    { data: 'name', name: 'users.name' },
+                    { data: 'username', name: 'users.username' },
+                    { data: 'created_at', mRender: data => formatDate(data) },
+                    {
+                        data: null,
+                        name: 'status',
+                        mRender: (data, type, row) => {
+                            if (row.status == 'pending') {
+                                return '<span class="badge badge-soft-warning font-size-13 border">Waiting for access</span>';
+                            } else if (row.status == 'verified') {
+                                return '<span class="badge badge-soft-success font-size-13 border">Verified</span>';
+                            } else if (row.status == 'rejected') {
+                                return '<span class="badge badge-soft-danger font-size-13 border">Rejected</span>';
+                            } else if (row.status == 'logged_out') {
+                                return '<span class="badge badge-soft-info font-size-13 border">Logged Out</span>';
+                            }
+
+                            return row.status;
+                        }
+                    },
+                    {
+                        data: null,
+                        mRender: (data, type, row) => {
+                            if (row.status == 'pending') {
+                                return `
+                                    <button type="button" class="btn btn-soft-success btn-sm waves-effect waves-light change-status-btn" data-id="${row.id}" data-status="verified"><i class="fa fa-check"></i> Approve</button>
+                                    <button type="button" class="btn btn-soft-danger btn-sm waves-effect waves-light change-status-btn" data-id="${row.id}" data-status="rejected"><i class="fa fa-times"></i> Reject</button>
+                                `;
+                            } else if (row.status == 'verified') {
+                                return `
+                                    <button type="button" class="btn btn-soft-danger btn-sm waves-effect waves-light change-status-btn" data-id="${row.id}" data-status="logged_out"><i class="bx bx-power-off text-bold"></i> Logout</button>
+                                `;
+                            }
+
+                            return '';
+                        }
+                    }
+                ],
+            });
+        });
+    </script>
+@endsection
