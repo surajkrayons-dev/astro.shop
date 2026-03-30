@@ -18,7 +18,7 @@ class Order extends Model
         'order_number',
         'subtotal',
         'discount',
-        'extra_discount',
+        'delivery_charge',
         'wallet_used',
         'paid_amount',
         'total_amount',
@@ -30,11 +30,13 @@ class Order extends Model
     ];
 
     protected $casts = [
-        'price_breakdown' => 'array',
-        'created_at'   => 'datetime',
-        'updated_at'   => 'datetime',
-        'delivered_at' => 'datetime',
-    ];
+    'price_breakdown' => 'array',
+    'paid_at' => 'datetime',
+    'cancelled_at' => 'datetime',
+    'delivered_at' => 'datetime',
+    'created_at' => 'datetime',
+    'updated_at' => 'datetime',
+];
 
     public function user()
     {

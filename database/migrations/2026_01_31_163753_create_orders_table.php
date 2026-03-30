@@ -22,7 +22,7 @@ return new class extends Migration
 
             $table->decimal('subtotal', 10, 2);
             $table->decimal('discount', 10, 2)->default(0);
-            $table->decimal('extra_discount', 10, 2)->default(0);
+            $table->decimal('delivery_charge', 10, 2)->default(0);
 
             $table->decimal('wallet_used', 10, 2)->default(0);
             $table->decimal('paid_amount', 10, 2)->default(0);
