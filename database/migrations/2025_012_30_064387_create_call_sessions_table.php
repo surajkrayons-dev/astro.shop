@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('astrologer_id');
             $table->unsignedBigInteger('user_id');
+            $table->decimal('lock_amount', 12, 2)->default(0);
 
             $table->string('user_number')->nullable();
             $table->string('astro_number')->nullable();
@@ -27,7 +28,7 @@ return new class extends Migration
             $table->integer('duration')->nullable();
             $table->decimal('amount', 10, 2)->default(0);
 
-            $table->enum('status', ['pending', 'active', 'completed', 'missed'])->default('pending');
+            $table->enum('status', ['initiated', 'ringing', 'active', 'completed', 'missed'])->default('initiated');
             $table->timestamps();
 
             $table->foreign('astrologer_id')->references('id')->on('users');

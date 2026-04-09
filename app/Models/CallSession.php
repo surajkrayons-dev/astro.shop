@@ -16,6 +16,7 @@ class CallSession extends Model
         'user_id',
         'user_number',
         'astro_number',
+        'lock_amount',
         'started_at',
         'ended_at',
         'call_sid',
