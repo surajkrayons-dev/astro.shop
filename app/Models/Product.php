@@ -52,7 +52,7 @@ class Product extends Model
     ];
 
     protected $casts = [
-
+        'stock_qty' => 'integer',
         'ratti_options' => 'array',
         'specifications' => 'array',
         'faq' => 'array',

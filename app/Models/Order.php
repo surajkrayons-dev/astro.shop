@@ -13,6 +13,12 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'address_id',
+        'name',
+        'mobile',
+        'alternative_mobile',
+        'address',
+        'pincode',
         'coupon_id',
         'payment_id',
         'order_number',
@@ -30,13 +36,13 @@ class Order extends Model
     ];
 
     protected $casts = [
-    'price_breakdown' => 'array',
-    'paid_at' => 'datetime',
-    'cancelled_at' => 'datetime',
-    'delivered_at' => 'datetime',
-    'created_at' => 'datetime',
-    'updated_at' => 'datetime',
-];
+        'price_breakdown' => 'array',
+        'paid_at' => 'datetime',
+        'cancelled_at' => 'datetime',
+        'delivered_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
 
     public function user()
     {

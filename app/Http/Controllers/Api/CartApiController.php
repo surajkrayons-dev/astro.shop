@@ -46,7 +46,10 @@ class CartApiController extends Controller
         DB::beginTransaction();
 
         try {
-            $product = Product::with('category')->findOrFail($request->product_id);
+            $product = Product::with('category')
+                ->where('id', $request->product_id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
             $cart = Cart::firstOrCreate(['user_id' => $user->id]);
 
@@ -83,6 +86,16 @@ class CartApiController extends Controller
                 ->where('product_id', $product->id)
                 ->where('ratti', $ratti)
                 ->first();
+
+            $newQty = $request->quantity;
+
+            if ($item) {
+                $newQty = $item->quantity + $request->quantity;
+            }
+
+            if ($product->stock_qty < $newQty) {
+                throw new \Exception('Only ' . $product->stock_qty . ' items available');
+            }
 
             if ($item) {
                 $item->quantity += $request->quantity;
@@ -128,6 +141,23 @@ class CartApiController extends Controller
         $item = CartItem::where('id', $request->item_id)
             ->whereHas('cart', fn($q) => $q->where('user_id', $user->id))
             ->firstOrFail();
+
+        $product = $item->product;
+        
+        if (!$product) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Product not found'
+            ], 404);
+        }
+
+        if ($product && $product->stock_qty < $request->quantity) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Stock not available'
+            ], 400);
+        }
+
 
         $item->quantity = $request->quantity;
         $item->total_price = $item->quantity * $item->price_at_time;

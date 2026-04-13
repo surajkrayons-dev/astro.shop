@@ -15,6 +15,12 @@ return new class extends Migration
             $table->id();
 
             $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('address_id')->nullable();
+            $table->string('name')->nullable();
+            $table->string('mobile')->nullable();
+            $table->string('alternative_mobile')->nullable();
+            $table->text('address')->nullable();
+            $table->string('pincode')->nullable();
             $table->unsignedBigInteger('coupon_id')->nullable();
             $table->unsignedBigInteger('payment_id')->nullable();
 
@@ -27,7 +33,7 @@ return new class extends Migration
             $table->decimal('wallet_used', 10, 2)->default(0);
             $table->decimal('paid_amount', 10, 2)->default(0);
 
-            $table->decimal('total_amount', 10, 2); // after discount
+            $table->decimal('total_amount', 10, 2);
 
             $table->enum('status', [
                 'pending',
@@ -56,6 +62,10 @@ return new class extends Migration
 
             $table->foreign('payment_id')
                 ->references('id')->on('payments')
+                ->nullOnDelete();
+
+            $table->foreign('address_id')
+                ->references('id')->on('alternative_addresses')
                 ->nullOnDelete();
         });
     }

@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 use App\Models\Payment;
+use App\Models\AlternativeAddress;
+use App\Models\Product;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Order;
@@ -30,6 +32,7 @@ class StoreRazorpayPaymentController extends Controller
 
             $request->validate([
                 'coupon_code' => 'nullable|string',
+                'address_id' => 'nullable|exists:alternative_addresses,id',
                 'wallet_amount' => 'nullable|numeric|min:0',
                 'delivery_charge' => 'nullable|numeric|min:0'
             ]);
@@ -107,6 +110,7 @@ class StoreRazorpayPaymentController extends Controller
 
                 'notes' => [
                     'user_id' => $user->id,
+                    'address_id' => $request->address_id,
                     'subtotal' => $subtotal,
                     'discount' => $discount,
                     'delivery_charge' => $deliveryCharge,
@@ -146,6 +150,7 @@ class StoreRazorpayPaymentController extends Controller
             'razorpay_order_id' => 'required',
             'razorpay_payment_id' => 'nullable',
             'razorpay_signature' => 'nullable',
+            'address_id' => 'nullable|exists:alternative_addresses,id',
             'coupon_code' => 'nullable',
             'wallet_amount' => 'nullable|numeric|min:0',
             'delivery_charge' => 'nullable|numeric|min:0'
@@ -202,7 +207,6 @@ class StoreRazorpayPaymentController extends Controller
 
             $afterDiscount = max(0, $subtotal - $discount);
 
-            // 🔥 WALLET VALIDATION
             $wallet = StoreWallet::firstOrCreate(['user_id' => $user->id]);
 
             if ($walletInput > $wallet->balance) {
@@ -280,7 +284,6 @@ class StoreRazorpayPaymentController extends Controller
                 ]);
             }
 
-            // 🔥 WALLET DEDUCT (SAFE)
             if ($walletUsed > 0) {
 
                 $wallet->refresh();
@@ -295,7 +298,14 @@ class StoreRazorpayPaymentController extends Controller
                 ]);
             }
 
-            // 🔥 ORDER CREATE
+            $address = null;
+
+            if ($request->address_id) {
+                $address = DB::table('alternative_addresses')
+                    ->where('id', $request->address_id)
+                    ->first();
+            }
+
             $order = Order::create([
                 'user_id' => $user->id,
                 'coupon_id' => $couponId,
@@ -318,12 +328,49 @@ class StoreRazorpayPaymentController extends Controller
                     'final_amount' => ($afterDiscount + $deliveryCharge)
                 ],
 
+                'address_id' => $request->address_id,
+                'name' => $address->name ?? null,
+                'mobile' => $address->mobile ?? null,
+                'alternative_mobile' => $address->alternative_mobile ?? null,
+                'address' => $address->address ?? null,
+                'pincode' => $address->pincode ?? null,
+
                 'status' => 'paid',
                 'paid_at' => now()
             ]);
 
-            // 🔥 ORDER ITEMS
-            foreach ($items as $item) {
+                $productIds = $items->pluck('product_id')->unique();
+
+                $products = Product::whereIn('id', $productIds)
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('id');
+
+                foreach ($items as $item) {
+
+                $product = $products[$item->product_id] ?? null;
+
+                if (!$product) {
+                    throw new \Exception('Product not found');
+                }
+
+                if ($product->stock_qty < $item->quantity) {
+                    throw new \Exception(($product->name ?? 'Product') . ' out of stock');
+                }
+
+                $newStock = $product->stock_qty - $item->quantity;
+
+                $status = 'in_stock';
+                if ($newStock == 0) {
+                    $status = 'out_of_stock';
+                } elseif ($newStock <= 5) {
+                    $status = 'few_left';
+                }
+
+                $product->update([
+                    'stock_qty' => $newStock,
+                    'stock_status' => $status
+                ]);
 
                 OrderItem::create([
                     'order_id' => $order->id,
@@ -336,7 +383,7 @@ class StoreRazorpayPaymentController extends Controller
                     'price' => $item->price_at_time,
                     'total' => $item->total_price
                 ]);
-            }
+                }
 
             CartItem::where('cart_id', $cart->id)->delete();
 
@@ -428,6 +475,27 @@ class StoreRazorpayPaymentController extends Controller
             $totalOrderAmount = $order->total_amount;
 
             foreach ($order->items as $item) {
+
+                $product = Product::where('id', $item->product_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($product) {
+
+                    $newStock = $product->stock_qty + $item->quantity;
+
+                    $status = 'in_stock';
+                    if ($newStock == 0) {
+                        $status = 'out_of_stock';
+                    } elseif ($newStock <= 5) {
+                        $status = 'few_left';
+                    }
+
+                    $product->update([
+                        'stock_qty' => $newStock,
+                        'stock_status' => $status
+                    ]);
+                }
 
                 $itemTotal = $item->total; // ✅ सही column
 
