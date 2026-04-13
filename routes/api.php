@@ -287,8 +287,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     Route::prefix('store-wallet')->group(function () {
-        Route::get('/', [StoreWalletApiController::class, 'show']);
-        Route::post('/add', [StoreWalletApiController::class, 'addMoney']);
+        Route::get('/', [StoreWalletApiController::class, 'show']);        
+        Route::get('/history', [StoreWalletApiController::class, 'history']);
+        Route::get('/summary', [StoreWalletApiController::class, 'summary']); 
+
+        Route::post('/add', [StoreWalletApiController::class, 'addMoney']);   
         Route::post('/spend', [StoreWalletApiController::class, 'spendMoney']);
     });
 
