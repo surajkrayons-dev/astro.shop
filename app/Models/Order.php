@@ -112,5 +112,46 @@ class Order extends Model
             });
 
         });
+
+        static::updated(function ($order) {
+
+            if (
+                $order->isDirty('status') &&
+                $order->getOriginal('status') != 'cancelled' &&
+                $order->status == 'cancelled'
+            ) {
+
+                DB::afterCommit(function () use ($order) {
+
+                    try {
+
+                        $order = $order->fresh()->load([
+                            'user',
+                            'items.product',
+                            'payment',
+                            'walletTransactions'
+                        ]);
+
+                        if (!$order->user || !$order->user->email) {
+                            \Log::error('User email missing for cancel mail');
+                            return;
+                        }
+
+                        Mail::to($order->user->email)
+                            ->send(new \App\Mail\OrderCancelledMail($order));
+
+                        \Log::info('Cancel mail sent', [
+                            'order_id' => $order->id
+                        ]);
+
+                    } catch (\Exception $e) {
+                        \Log::error('Cancel Mail Failed', [
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+
+                });
+            }
+        });
     }
 }
