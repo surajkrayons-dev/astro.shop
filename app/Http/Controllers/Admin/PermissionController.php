@@ -17,7 +17,7 @@ class PermissionController extends AdminController
     public function getList(Request $request)
     {
         $list = User::where('role_id', 4)
-            ->select('id', 'name', 'email');
+            ->select('id', 'name', 'username', 'email');
 
         return \DataTables::of($list)->make(true);
     }
@@ -36,6 +36,8 @@ class PermissionController extends AdminController
         $user->permissions = json_encode($request->permissions);
         $user->save();
 
-        return back()->with('success', 'Permissions Updated');
+        return redirect()
+            ->route('admin.permissions.index')
+            ->with('success', 'Permissions updated successfully!');
     }
 }

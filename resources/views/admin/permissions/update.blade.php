@@ -12,15 +12,15 @@
             </h4>
 
             <div class="page-title-right">
-                <a href="{{ route('admin.permissions.index') }}" class="btn btn-secondary">
-                    Back
+                <a href="{{ route('admin.permissions.index') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Back
                 </a>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card">
+<div class="card shadow-sm border-0">
     <div class="card-body">
 
         <form method="POST" action="{{ route('admin.permissions.update', $user->id) }}">
@@ -28,175 +28,62 @@
 
             @php
             $permissions = json_decode($user->permissions ?? '[]');
+
+            $allPermissions = [
+            ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'fas fa-home'],
+            ['key' => 'interactions', 'label' => 'Interactions', 'icon' => 'fas fa-comments'],
+            ['key' => 'product_stocks', 'label' => 'Product Stock', 'icon' => 'fas fa-boxes'],
+            ['key' => 'zodiac_signs', 'label' => 'Zodiac Signs', 'icon' => 'fas fa-star'],
+            ['key' => 'horoscopes', 'label' => 'Horoscope', 'icon' => 'fas fa-moon'],
+            ['key' => 'astrologers', 'label' => 'Astrologers', 'icon' => 'fas fa-user-astronaut'],
+            ['key' => 'users', 'label' => 'Users', 'icon' => 'fas fa-users'],
+            ['key' => 'payouts', 'label' => 'Payouts', 'icon' => 'fas fa-wallet'],
+            ['key' => 'blog_categories', 'label' => 'Blog Category', 'icon' => 'fas fa-layer-group'],
+            ['key' => 'blogs', 'label' => 'Blogs', 'icon' => 'fas fa-blog'],
+            ['key' => 'coupons', 'label' => 'Coupons', 'icon' => 'fas fa-tags'],
+            ['key' => 'product_categories', 'label' => 'Product Category', 'icon' => 'fas fa-th-large'],
+            ['key' => 'products', 'label' => 'Products', 'icon' => 'fas fa-box'],
+            ['key' => 'orders', 'label' => 'Orders', 'icon' => 'fas fa-shopping-cart'],
+            ['key' => 'returns', 'label' => 'Returns', 'icon' => 'fas fa-undo'],
+            ['key' => 'astro_banners', 'label' => 'Astro Banner', 'icon' => 'fas fa-image'],
+            ['key' => 'store_banners', 'label' => 'Store Banner', 'icon' => 'fas fa-images'],
+            ['key' => 'send_mail', 'label' => 'Send Mail', 'icon' => 'fas fa-envelope'],
+            ];
             @endphp
 
             <div class="row">
 
-                <!-- DASHBOARD -->
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="dashboard"
-                            {{ in_array('dashboard', $permissions) ? 'checked' : '' }}>
-                        Dashboard
-                    </label>
-                </div>
+                @foreach($allPermissions as $perm)
+                <div class="col-md-4 col-lg-3 mb-3">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body d-flex justify-content-between align-items-center">
 
-                <!-- INTERACTIONS -->
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="interactions"
-                            {{ in_array('interactions', $permissions) ? 'checked' : '' }}>
-                        Interactions
-                    </label>
-                </div>
+                            <div class="d-flex align-items-center">
+                                <div class="me-3 text-primary">
+                                    <i class="{{ $perm['icon'] }} fs-5"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-semibold">{{ $perm['label'] }}</h6>
+                                </div>
+                            </div>
 
-                <!-- PRODUCT STOCK -->
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="product_stocks"
-                            {{ in_array('product_stocks', $permissions) ? 'checked' : '' }}>
-                        Product Stock
-                    </label>
-                </div>
+                            <div class="form-check form-switch m-0">
+                                <input class="form-check-input" type="checkbox" name="permissions[]"
+                                    value="{{ $perm['key'] }}" id="perm_{{ $perm['key'] }}"
+                                    {{ in_array($perm['key'], $permissions) ? 'checked' : '' }}>
+                            </div>
 
-                <!-- ZODIAC -->
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="zodiac_signs"
-                            {{ in_array('zodiac_signs', $permissions) ? 'checked' : '' }}>
-                        Zodiac Signs
-                    </label>
+                        </div>
+                    </div>
                 </div>
-
-                <!-- HOROSCOPE -->
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="horoscopes"
-                            {{ in_array('horoscopes', $permissions) ? 'checked' : '' }}>
-                        Horoscope
-                    </label>
-                </div>
-
-                <!-- ASTROLOGERS -->
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="astrologers"
-                            {{ in_array('astrologers', $permissions) ? 'checked' : '' }}>
-                        Astrologers
-                    </label>
-                </div>
-
-                <!-- USERS -->
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="users"
-                            {{ in_array('users', $permissions) ? 'checked' : '' }}>
-                        Users
-                    </label>
-                </div>
-
-                <!-- PAYOUT -->
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="payouts"
-                            {{ in_array('payouts', $permissions) ? 'checked' : '' }}>
-                        Payout Requests
-                    </label>
-                </div>
-
-                <!-- BLOG CATEGORY -->
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="blog_categories"
-                            {{ in_array('blog_categories', $permissions) ? 'checked' : '' }}>
-                        Blog Category
-                    </label>
-                </div>
-
-                <!-- BLOG -->
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="blogs"
-                            {{ in_array('blogs', $permissions) ? 'checked' : '' }}>
-                        Blog
-                    </label>
-                </div>
-
-                <!-- COUPONS -->
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="coupons"
-                            {{ in_array('coupons', $permissions) ? 'checked' : '' }}>
-                        Coupons
-                    </label>
-                </div>
-
-                <!-- PRODUCT CATEGORY -->
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="product_categories"
-                            {{ in_array('product_categories', $permissions) ? 'checked' : '' }}>
-                        Product Category
-                    </label>
-                </div>
-
-                <!-- PRODUCTS -->
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="products"
-                            {{ in_array('products', $permissions) ? 'checked' : '' }}>
-                        Products
-                    </label>
-                </div>
-
-                <!-- ORDERS -->
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="orders"
-                            {{ in_array('orders', $permissions) ? 'checked' : '' }}>
-                        Orders
-                    </label>
-                </div>
-
-                <!-- RETURNS -->
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="returns"
-                            {{ in_array('returns', $permissions) ? 'checked' : '' }}>
-                        Returns
-                    </label>
-                </div>
-
-                <!-- BANNERS -->
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="astro_banners"
-                            {{ in_array('astro_banners', $permissions) ? 'checked' : '' }}>
-                        Astro Banner
-                    </label>
-                </div>
-
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="store_banners"
-                            {{ in_array('store_banners', $permissions) ? 'checked' : '' }}>
-                        Store Banner
-                    </label>
-                </div>
-
-                <!-- MAIL -->
-                <div class="col-md-3">
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="send_mail"
-                            {{ in_array('send_mail', $permissions) ? 'checked' : '' }}>
-                        Send Mail
-                    </label>
-                </div>
+                @endforeach
 
             </div>
 
-            <div class="mt-4">
-                <button type="submit" class="btn btn-success">Save Permissions</button>
+            <div class="mt-4 d-flex justify-content-end">
+                <button type="submit" class="btn btn-success px-4">
+                    <i class="fas fa-save"></i> Save Permissions
+                </button>
             </div>
 
         </form>

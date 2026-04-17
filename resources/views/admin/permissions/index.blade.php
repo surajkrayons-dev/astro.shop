@@ -10,7 +10,6 @@
             <h4 class="mb-sm-0 font-size-18">Permissions Access</h4>
 
             <div class="page-title-right">
-                {{-- optional button --}}
                 <a href="javascript:void(0);" class="btn btn-soft-info disabled">
                     <i class="fas fa-info-circle"></i> Given Permissions Access
                 </a>
@@ -28,8 +27,9 @@
                     <thead>
                         <tr>
                             <th>Name</th>
+                            <th>Username</th>
                             <th>Email</th>
-                            <th width="120">Action</th>
+                            <th class="text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -48,6 +48,10 @@
 <script>
 $(function() {
 
+    @if(session('success'))
+    toastr.success("{{ session('success') }}");
+    @endif
+
     $('#data-table').DataTable({
         processing: true,
         serverSide: true,
@@ -61,20 +65,23 @@ $(function() {
                 name: 'name'
             },
             {
+                data: 'username',
+                name: 'username'
+            },
+            {
                 data: 'email',
                 name: 'email'
             },
-
             {
                 data: null,
                 orderable: false,
                 searchable: false,
                 className: 'text-center',
                 render: function(data, type, row) {
-
                     return `
-                        <a href="/permissions/update/${row.id}" class="btn btn-sm btn-primary">
-                            Manage
+                        <a href="/permissions/update/${row.id}" 
+                           class="btn btn-sm btn-primary">
+                            <i class="fas fa-user-shield"></i> Manage
                         </a>
                     `;
                 }
