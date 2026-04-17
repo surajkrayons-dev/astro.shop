@@ -68,6 +68,11 @@ class Order extends Model
         return $this->belongsTo(Coupon::class);
     }
 
+    public function addressData()
+    {
+        return $this->belongsTo(\App\Models\AlternativeAddress::class, 'address_id');
+    }
+
     public function walletTransactions()
     {
         return $this->hasMany(StoreWalletTransaction::class);

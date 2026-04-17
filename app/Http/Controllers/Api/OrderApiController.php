@@ -142,7 +142,7 @@ class OrderApiController extends Controller
     // ✅ ORDER LIST
     public function index(Request $request)
     {
-        $orders = Order::with(['items.product.images', 'coupon'])
+        $orders = Order::with(['items.product.images', 'coupon', 'addressData'])
             ->where('user_id', $request->user()->id)
             ->latest()
             ->get();
@@ -156,7 +156,7 @@ class OrderApiController extends Controller
     // ✅ ORDER DETAIL
     public function show(Request $request, $id)
     {
-        $order = Order::with(['items.product.images', 'coupon'])
+        $order = Order::with(['items.product.images', 'coupon', 'addressData'])
             ->where('user_id', $request->user()->id)
             ->findOrFail($id);
 
@@ -193,20 +193,59 @@ class OrderApiController extends Controller
     // ✅ FORMAT ORDER
     private function formatOrder($id)
     {
-        $order = Order::with(['items.product.images', 'coupon'])->find($id);
+        $order = Order::with(['items.product.images', 'coupon', 'addressData'])->find($id);
         return $this->formatOrderData($order);
     }
 
     private function formatOrderData($order)
     {
         return [
+
+            // 🧾 BASIC
             'order_id' => $order->id,
             'order_number' => $order->order_number,
             'status' => $order->status,
-            'subtotal' => $order->subtotal,
-            'discount' => $order->discount,
-            'total_amount' => $order->total_amount,
 
+            // 👤 USER
+            'user_id' => $order->user_id,
+
+            // 💰 PRICING
+            'pricing' => [
+                'subtotal' => $order->subtotal,
+                'discount' => $order->discount,
+                'delivery_charge' => $order->delivery_charge,
+                'wallet_used' => $order->wallet_used,
+                'paid_amount' => $order->paid_amount,
+                'total_amount' => $order->total_amount,
+            ],
+
+            // 💳 PAYMENT
+            'payment' => [
+                'payment_id' => $order->payment_id,
+                'paid_at' => $order->paid_at,
+                'method' => $order->wallet_used ? 'wallet' : 'online',
+            ],
+
+            // 📍 ADDRESS
+            'address' => [
+                'snapshot' => [
+                    'name' => $order->name,
+                    'mobile' => $order->mobile,
+                    'alternative_mobile' => $order->alternative_mobile,
+                    'address' => $order->address,
+                    'pincode' => $order->pincode,
+                ],
+                'current' => $order->addressData ? [
+                    'id' => $order->addressData->id,
+                    'name' => $order->addressData->name,
+                    'mobile' => $order->addressData->mobile,
+                    'alternative_mobile' => $order->addressData->alternative_mobile,
+                    'address' => $order->addressData->address,
+                    'pincode' => $order->addressData->pincode,
+                ] : null,
+            ],
+
+            // 📦 ITEMS
             'items' => $order->items->map(function ($item) {
 
                 $product = $item->product;
@@ -214,14 +253,14 @@ class OrderApiController extends Controller
                 return [
                     'product_id' => $item->product_id,
 
-                    // 🔥 SNAPSHOT
+                    // SNAPSHOT
                     'name' => $item->product_name,
                     'slug' => $item->product_slug,
                     'image' => $item->product_image
                         ? asset('storage/product/' . $item->product_image)
                         : null,
 
-                    // 🔥 LIVE DATA
+                    // LIVE PRODUCT
                     'product' => $product ? [
                         'id' => $product->id,
                         'name' => $product->name,
@@ -229,7 +268,6 @@ class OrderApiController extends Controller
                         'description' => $product->description,
                         'stock' => $product->stock_qty,
                         'status' => $product->stock_status,
-
                         'images' => $product->images->map(fn($img) =>
                             asset('storage/product/' . $img->images)
                         ),
@@ -242,13 +280,26 @@ class OrderApiController extends Controller
                 ];
             }),
 
+            // 🎟 COUPON
             'coupon' => $order->coupon ? [
+                'id' => $order->coupon->id,
                 'code' => $order->coupon->code,
                 'type' => $order->coupon->discount_type,
                 'value' => $order->coupon->discount_value,
             ] : null,
 
-            'created_at' => $order->created_at,
+            // 🧠 EXTRA
+            'meta' => [
+                'price_breakdown' => $order->price_breakdown,
+            ],
+
+            // 🕒 TIMELINE
+            'timestamps' => [
+                'created_at' => $order->created_at,
+                'paid_at' => $order->paid_at,
+                'delivered_at' => $order->delivered_at,
+                'cancelled_at' => $order->cancelled_at,
+            ],
         ];
     }
 }
