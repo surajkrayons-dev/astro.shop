@@ -35,4 +35,10 @@ return [
         'caller_id' => env('SMARTFLO_CALLER_ID'),
     ],
 
+    'shiprocket' => [
+        'email' => env('SHIPROCKET_EMAIL'),
+        'password' => env('SHIPROCKET_PASSWORD'),
+        'base_url' => env('SHIPROCKET_BASE_URL'),
+    ],
+
 ];

@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Razorpay\Api\Api;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Services\ShiprocketService;
+
 use App\Models\Payment;
 use App\Models\AlternativeAddress;
 use App\Models\Product;
@@ -19,7 +19,6 @@ use App\Models\StoreWallet;
 use App\Models\StoreWalletTransaction;
 use App\Models\OrderItemCancellation;
 use App\Models\Coupon;
-use Illuminate\Support\Facades\Cache;
 
 class StoreRazorpayPaymentController extends Controller
 {
@@ -43,9 +42,8 @@ class StoreRazorpayPaymentController extends Controller
 
             // 🔥 CART
             $cart = Cart::where('user_id', $user->id)->firstOrFail();
-            // $items = CartItem::where('cart_id', $cart->id)->get();
-            $items = CartItem::with('product')->where('cart_id', $cart->id)->get();
-            
+            $items = CartItem::where('cart_id', $cart->id)->get();
+
             if ($items->isEmpty()) {
                 return response()->json(['status' => false, 'message' => 'Cart empty']);
             }
@@ -186,8 +184,7 @@ class StoreRazorpayPaymentController extends Controller
 
             // 🔥 CART
             $cart = Cart::where('user_id', $user->id)->firstOrFail();
-            // $items = CartItem::where('cart_id', $cart->id)->get();
-            $items = CartItem::with('product')->where('cart_id', $cart->id)->get();
+            $items = CartItem::where('cart_id', $cart->id)->get();
 
             if ($items->isEmpty()) {
                 throw new \Exception('Cart empty');
@@ -341,59 +338,16 @@ class StoreRazorpayPaymentController extends Controller
 
                 'address_id' => $request->address_id,
                 'name' => $address->name ?? null,
-                'email' => $address->email ?? null,
                 'mobile' => $address->mobile ?? null,
                 'alternative_mobile' => $address->alternative_mobile ?? null,
                 'address' => $address->address ?? null,
                 'pincode' => $address->pincode ?? null,
-                'city' => $address->city ?? null,     
-                'state' => $address->state ?? null, 
-                'country' => $address->country ?? 'India',
 
                 'status' => 'paid',
                 'paid_at' => now()
             ]);
 
-            try {
-
-                $shiprocket = new ShiprocketService();
-
-                $srOrder = $shiprocket->createOrder($order, $items);
-
-                \Log::info('SR ORDER RESPONSE', $srOrder);
-
-                if (!empty($srOrder['shipment_id'])) {
-
-                    $shipmentId = is_array($srOrder['shipment_id'])
-                        ? $srOrder['shipment_id'][0]
-                        : $srOrder['shipment_id'];
-
-                    $awbResponse = $shiprocket->assignAwb($shipmentId);
-
-                    \Log::info('SR AWB RESPONSE', $awbResponse);
-
-                    $awbCode = $awbResponse['awb_code'] ?? null;
-                    $courier = $awbResponse['courier_name'] ?? null;
-
-                    $pickupResponse = $shiprocket->generatePickup($shipmentId);
-
-                    \Log::info('SR PICKUP RESPONSE', $pickupResponse);
-
-                    $order->update([
-                        'shipment_id' => $shipmentId,
-                        'awb_code' => $awbCode,
-                        'courier_name' => $courier,
-                        'shipping_status' => 'created'
-                    ]);
-                }
-
-            } catch (\Exception $e) {
-
-                \Log::error('SHIPROCKET ERROR', [
-                    'message' => $e->getMessage()
-                ]);
-            }
-
+            // WALLET DEDUCT AFTER ORDER CREATE
             if ($walletUsed > 0) {
 
                 $wallet->refresh();
@@ -412,7 +366,7 @@ class StoreRazorpayPaymentController extends Controller
 
                 StoreWalletTransaction::create([
                     'user_id' => $user->id,
-                    'order_id' => $order->id, 
+                    'order_id' => $order->id, // ✅ FIXED
                     'type' => 'debit',
                     'amount' => $walletUsed,
                     'source' => 'order_payment',

@@ -25,19 +25,27 @@ class AlternativeAddressApiController extends Controller
     {
         $request->validate([
             'name'               => 'required|string|max:255',
+            'gmail'             => 'nullable|email|max:255',
             'country_code'       => 'required|string|max:5',
             'mobile'             => 'required|string|max:20',
             'alternative_mobile' => 'nullable|string|max:20',
+            'city'               => 'required|string|max:255',
+            'state'              => 'required|string|max:255',
+            'country'            => 'required|string|max:255',
             'address'            => 'required|string',
             'pincode'            => 'required|string|max:10',
         ]);
 
         $address = AlternativeAddress::create([
             'user_id'            => $request->user()->id,
+            'gmail'              => $request->gmail,
             'name'               => $request->name,
             'country_code'       => $request->country_code ?? '+91',
             'mobile'             => $request->mobile,
             'alternative_mobile' => $request->alternative_mobile,
+            'city'               => $request->city,
+            'state'              => $request->state,
+            'country'            => $request->country,
             'address'            => $request->address,
             'pincode'            => $request->pincode,
         ]);
@@ -69,18 +77,26 @@ class AlternativeAddressApiController extends Controller
 
         $request->validate([
             'name'               => 'required|string|max:255',
+            'gmail'             => 'nullable|email|max:255',
             'country_code'       => 'required|string|max:5',
             'mobile'             => 'required|string|max:20',
             'alternative_mobile' => 'nullable|string|max:20',
+            'city'               => 'required|string|max:255',
+            'state'              => 'required|string|max:255',
+            'country'            => 'required|string|max:255',
             'address'            => 'required|string',
             'pincode'            => 'required|string|max:10',
         ]);
 
         $address->update([
             'name'               => $request->name,
+            'gmail'             => $request->gmail,
             'country_code'       => $request->country_code ?? '+91',
             'mobile'             => $request->mobile,
             'alternative_mobile' => $request->alternative_mobile,
+            'city'               => $request->city,
+            'state'              => $request->state,
+            'country'            => $request->country,
             'address'            => $request->address,
             'pincode'            => $request->pincode,
         ]);

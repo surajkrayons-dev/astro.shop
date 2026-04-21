@@ -116,12 +116,27 @@
                     <!-- ADDRESS -->
                     <tr>
                         <td style="padding:15px;">
-                            <h3 style="color:#e65100;">📍 Delivery Address</h3>
-                            <p style="font-size:13px;line-height:1.6;">
-                                {{ $order->name }}<br>
-                                {{ $order->mobile }}<br>
-                                {{ $order->address }}<br>
-                                {{ $order->pincode }}
+                            <h3 style="color:#e65100;margin-bottom:8px;">📍 Delivery Address</h3>
+
+                            <p style="font-size:13px;line-height:1.7;color:#333;margin:0;">
+
+                                <strong style="font-size:14px;">{{ $order->name ?? '' }}</strong><br>
+
+                                @if($order->mobile)
+                                📞 {{ $order->mobile }}<br>
+                                @endif
+
+                                @if($order->email)
+                                ✉️ {{ $order->email }}<br>
+                                @endif
+
+                                <br>
+
+                                {{ $order->address ?? '' }}<br>
+
+                                {{ $order->city ?? '' }}, {{ $order->state ?? '' }} - {{ $order->pincode ?? '' }}<br>
+
+                                {{ $order->country ?? '' }}
                             </p>
                         </td>
                     </tr>

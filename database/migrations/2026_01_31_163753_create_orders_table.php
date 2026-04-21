@@ -17,12 +17,20 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('address_id')->nullable();
             $table->string('name')->nullable();
+            $table->string('email')->nullable();
             $table->string('mobile')->nullable();
             $table->string('alternative_mobile')->nullable();
+            $table->string('city')->nullable();
+            $table->string('state')->nullable();
+            $table->string('country')->default('India');
             $table->text('address')->nullable();
             $table->string('pincode')->nullable();
             $table->unsignedBigInteger('coupon_id')->nullable();
             $table->unsignedBigInteger('payment_id')->nullable();
+            $table->string('shipment_id')->nullable();
+            $table->string('awb_code')->nullable();
+            $table->string('courier_name')->nullable();
+            $table->string('shipping_status')->default('pending');
 
             $table->string('order_number')->unique();
 

@@ -14,9 +14,13 @@ class AlternativeAddress extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'email',
         'country_code',
         'mobile',
         'alternative_mobile',
+        'city',
+        'state',
+        'country',
         'address',
         'pincode'
     ];
