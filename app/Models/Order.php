@@ -42,6 +42,10 @@ class Order extends Model
         'wallet_used',
         'paid_amount',
         'total_amount',
+        'total_weight',
+        'box_length',
+        'box_breadth',
+        'box_height',
         'status',
         'paid_at',
         'cancelled_at',
@@ -57,6 +61,8 @@ class Order extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    // ================= RELATIONS =================
 
     public function user()
     {
@@ -93,8 +99,13 @@ class Order extends Model
         return $this->hasMany(OrderItemCancellation::class);
     }
 
+    // ================= EVENTS =================
+
     protected static function booted()
     {
+        /**
+         * ✅ ORDER CREATED → MAILS
+         */
         static::created(function ($order) {
 
             DB::afterCommit(function () use ($order) {
@@ -103,7 +114,7 @@ class Order extends Model
 
                     $order = $order->fresh()->load([
                         'user',
-                        'items.product', 
+                        'items.product',
                         'payment'
                     ]);
 
@@ -112,11 +123,13 @@ class Order extends Model
                         return;
                     }
 
+                    // Thank you mail
                     Mail::to($order->user->email)
-                        ->send(new \App\Mail\OrderThankYouMail($order));
+                        ->send(new OrderThankYouMail($order));
 
+                    // Order details mail
                     Mail::to($order->user->email)
-                        ->send(new \App\Mail\OrderDetailsMail($order));
+                        ->send(new OrderDetailsMail($order));
 
                 } catch (\Exception $e) {
                     \Log::error('Order Mail Failed', [
@@ -128,11 +141,10 @@ class Order extends Model
 
         });
 
+        /**
+         * ✅ ORDER UPDATED → CANCEL / DELIVER MAIL
+         */
         static::updated(function ($order) {
-
-            if (!$order->isDirty('status')) {
-                return;
-            }
 
             DB::afterCommit(function () use ($order) {
 
@@ -150,26 +162,33 @@ class Order extends Model
                         return;
                     }
 
-                    // ✅ DELIVERED
-                    if (
-                        $order->getOriginal('status') != 'delivered' &&
-                        $order->status == 'delivered'
-                    ) {
-                        Mail::to($order->user->email)
-                            ->send(new \App\Mail\OrderDeliveredMail($order));
+                    // 🔥 DELIVERED MAIL
+                    if ($order->status === 'delivered') {
 
-                        \Log::info('Delivered mail sent', ['order_id' => $order->id]);
+                        // duplicate mail avoid
+                        if (!$order->delivered_at) {
+                            $order->updateQuietly([
+                                'delivered_at' => now()
+                            ]);
+                        }
+
+                        Mail::to($order->user->email)
+                            ->send(new OrderDeliveredMail($order));
+
+                        \Log::info('Delivered mail sent', [
+                            'order_id' => $order->id
+                        ]);
                     }
 
-                    // ✅ CANCELLED
-                    if (
-                        $order->getOriginal('status') != 'cancelled' &&
-                        $order->status == 'cancelled'
-                    ) {
-                        Mail::to($order->user->email)
-                            ->send(new \App\Mail\OrderCancelledMail($order));
+                    // 🔥 CANCEL MAIL
+                    if ($order->status === 'cancelled') {
 
-                        \Log::info('Cancel mail sent', ['order_id' => $order->id]);
+                        Mail::to($order->user->email)
+                            ->send(new OrderCancelledMail($order));
+
+                        \Log::info('Cancel mail sent', [
+                            'order_id' => $order->id
+                        ]);
                     }
 
                 } catch (\Exception $e) {
@@ -179,6 +198,7 @@ class Order extends Model
                 }
 
             });
+
         });
     }
 }

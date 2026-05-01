@@ -35,6 +35,7 @@ return new class extends Migration
 
             $table->decimal('rating_avg', 3, 2)->default(0);
             $table->integer('rating_count')->default(0);
+            
             $table->decimal('before_price', 10, 2)->nullable();
             $table->decimal('after_price', 10, 2)->nullable();
 
@@ -50,6 +51,11 @@ return new class extends Migration
             $table->string('meta_title')->nullable();
             $table->text('meta_description')->nullable();
             $table->json('meta_keywords')->nullable();
+
+            $table->decimal('weight', 8, 2)->nullable();
+            $table->decimal('length', 8, 2)->nullable();  
+            $table->decimal('breadth', 8, 2)->nullable(); 
+            $table->decimal('height', 8, 2)->nullable();   
 
             $table->integer('stock_qty')->default(0);
             $table->enum('stock_status', ['in_stock', 'few_left', 'out_of_stock'])

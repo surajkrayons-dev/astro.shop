@@ -43,6 +43,11 @@ return new class extends Migration
 
             $table->decimal('total_amount', 10, 2);
 
+            $table->decimal('total_weight', 10, 2)->nullable();
+            $table->decimal('box_length', 10, 2)->nullable();
+            $table->decimal('box_breadth', 10, 2)->nullable();
+            $table->decimal('box_height', 10, 2)->nullable();
+
             $table->enum('status', [
                 'pending',
                 'paid',

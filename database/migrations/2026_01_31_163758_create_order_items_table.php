@@ -28,6 +28,11 @@ return new class extends Migration
             $table->decimal('price', 12, 2);
             $table->decimal('total', 12, 2);
 
+            $table->decimal('weight', 8, 2)->nullable();
+            $table->decimal('length', 8, 2)->nullable();
+            $table->decimal('breadth', 8, 2)->nullable();
+            $table->decimal('height', 8, 2)->nullable();
+
             $table->timestamps();
 
             $table->foreign('order_id')

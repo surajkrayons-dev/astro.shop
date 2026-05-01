@@ -16,8 +16,6 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\CreateDefaultRoleSeeder::class,
             \Database\Seeders\CreateDefaultAdminSeeder::class,
             \Database\Seeders\CreateDefaultSettingsSeeder::class,
-            \Database\Seeders\CreateDefaultZodiacSignsSeeder::class,
-            \Database\Seeders\CreateDefaultHoroscopeSeeder::class,
         ]);
 
         // \App\Models\User::factory(10)->create();

@@ -17,7 +17,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command('payout:client-generate')->dailyAt('00:00');
+        $schedule->command('sync:shipway')->everyFiveMinutes();
     }
 
     /**

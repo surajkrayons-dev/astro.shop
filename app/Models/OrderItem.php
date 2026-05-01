@@ -20,7 +20,11 @@ class OrderItem extends Model
         'ratti',     
         'quantity',
         'price',
-        'total'
+        'total',
+        'weight',
+        'length',
+        'breadth',
+        'height'   
     ];
 
     protected $casts = [

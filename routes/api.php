@@ -37,6 +37,7 @@ use App\Http\Controllers\Api\HoroscopeGenerateController;
 | Public APIs (No Auth Required)
 |--------------------------------------------------------------------------
 */
+Route::post('/shipway/webhook', [StoreRazorpayPaymentController::class, 'webhook']);
 
 Route::post('/call/webhook', [EasyGoApiController::class, 'callWebhook']);
 

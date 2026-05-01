@@ -61,7 +61,7 @@
                             </script>
                             {{ env('APP_NAME') }}.
                         </p>
-                        <p>Design & Developed by <a href="#" target="_blank">Suraj Verma</a></p>
+                        <p>Design & Developed by <a href="https://astrotring.com/" target="_blank">AstroTring</a></p>
                     </div>
                 </div>
             </div>

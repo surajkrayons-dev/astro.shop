@@ -8,8 +8,7 @@
                 &copy; {{ env('APP_NAME') }}.
             </div>
             <div class="col-sm-6">
-                <div class="text-sm-end d-none d-sm-block">Design & Developed by <a href="#" target="_blank">Suraj
-                        Verma</a>
+                <div class="text-sm-end d-none d-sm-block">Design & Developed by <a href="https://astrotring.com/" target="_blank">AstroTring</a>
                 </div>
             </div>
         </div>

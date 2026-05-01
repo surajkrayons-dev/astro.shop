@@ -44,6 +44,11 @@ class Product extends Model
         'meta_description',
         'meta_keywords',
 
+        'weight',
+        'length',
+        'breadth',
+        'height',
+
         'stock_qty',
         'stock_status',
 

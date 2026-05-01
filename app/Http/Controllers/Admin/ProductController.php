@@ -106,6 +106,11 @@ class ProductController extends AdminController
             'before_price' => 'nullable|numeric',
             'after_price'  => 'nullable|numeric',
 
+            'weight'   => 'nullable|numeric|min:0',
+            'length'   => 'nullable|numeric|min:0',
+            'breadth'  => 'nullable|numeric|min:0',
+            'height'   => 'nullable|numeric|min:0',
+
             'stock_qty'    => 'required|integer|min:0',
 
             'status' => 'nullable|in:0,1',
@@ -177,6 +182,11 @@ class ProductController extends AdminController
 
                 'before_price' => $request->before_price,
                 'after_price' => $request->after_price,
+
+                'weight'  => $request->weight ?? 0,
+                'length'  => $request->length ?? 0,
+                'breadth' => $request->breadth ?? 0,
+                'height'  => $request->height ?? 0,
 
                 'stock_qty' => $request->stock_qty,
                 'stock_status' => Product::resolveStockStatus($request->stock_qty),
@@ -260,6 +270,11 @@ class ProductController extends AdminController
             'ratti_options.*.ratti_afterPrice' => 'required|numeric',
             'ratti_options.*.ratti_beforePrice' => 'nullable|numeric',
 
+            'weight'   => 'nullable|numeric|min:0',
+            'length'   => 'nullable|numeric|min:0',
+            'breadth'  => 'nullable|numeric|min:0',
+            'height'   => 'nullable|numeric|min:0',
+
             'lab_certificates' => 'nullable|array',
             'lab_certificates.*.image' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:4096',
             'lab_certificates.*.number' => 'nullable|string|max:255',
@@ -340,6 +355,11 @@ class ProductController extends AdminController
 
                 'before_price' => $request->before_price,
                 'after_price' => $request->after_price,
+
+                'weight'  => $request->weight ?? 0,
+                'length'  => $request->length ?? 0,
+                'breadth' => $request->breadth ?? 0,
+                'height'  => $request->height ?? 0,
 
                 'stock_qty' => $request->stock_qty,
                 'stock_status' => Product::resolveStockStatus($request->stock_qty),

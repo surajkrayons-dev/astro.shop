@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Razorpay\Api\Api;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Services\ShiprocketService;
+use App\Services\ShipwayService;
 use App\Models\Payment;
 use App\Models\AlternativeAddress;
 use App\Models\Product;
@@ -19,7 +19,6 @@ use App\Models\StoreWallet;
 use App\Models\StoreWalletTransaction;
 use App\Models\OrderItemCancellation;
 use App\Models\Coupon;
-use Illuminate\Support\Facades\Cache;
 
 class StoreRazorpayPaymentController extends Controller
 {
@@ -43,9 +42,8 @@ class StoreRazorpayPaymentController extends Controller
 
             // 🔥 CART
             $cart = Cart::where('user_id', $user->id)->firstOrFail();
-            // $items = CartItem::where('cart_id', $cart->id)->get();
-            $items = CartItem::with('product')->where('cart_id', $cart->id)->get();
-            
+            $items = CartItem::where('cart_id', $cart->id)->get();
+
             if ($items->isEmpty()) {
                 return response()->json(['status' => false, 'message' => 'Cart empty']);
             }
@@ -186,8 +184,7 @@ class StoreRazorpayPaymentController extends Controller
 
             // 🔥 CART
             $cart = Cart::where('user_id', $user->id)->firstOrFail();
-            // $items = CartItem::where('cart_id', $cart->id)->get();
-            $items = CartItem::with('product')->where('cart_id', $cart->id)->get();
+            $items = CartItem::where('cart_id', $cart->id)->get();
 
             if ($items->isEmpty()) {
                 throw new \Exception('Cart empty');
@@ -319,6 +316,7 @@ class StoreRazorpayPaymentController extends Controller
 
             $order = Order::create([
                 'user_id' => $user->id,
+                'user_name' => $user->name,
                 'coupon_id' => $couponId,
                 'payment_id' => $payment?->id,
                 'order_number' => 'ORD-' . strtoupper(uniqid()),
@@ -340,60 +338,21 @@ class StoreRazorpayPaymentController extends Controller
                 ],
 
                 'address_id' => $request->address_id,
+                
                 'name' => $address->name ?? null,
-                'email' => $address->email ?? null,
+                'email' => $user->email,
                 'mobile' => $address->mobile ?? null,
                 'alternative_mobile' => $address->alternative_mobile ?? null,
+                'city' => $address->city ?? null,
+                'state' => $address->state ?? null,
                 'address' => $address->address ?? null,
                 'pincode' => $address->pincode ?? null,
-                'city' => $address->city ?? null,     
-                'state' => $address->state ?? null, 
-                'country' => $address->country ?? 'India',
 
                 'status' => 'paid',
                 'paid_at' => now()
             ]);
 
-            try {
-
-                $shiprocket = new ShiprocketService();
-
-                $srOrder = $shiprocket->createOrder($order, $items);
-
-                \Log::info('SR ORDER RESPONSE', $srOrder);
-
-                if (!empty($srOrder['shipment_id'])) {
-
-                    $shipmentId = is_array($srOrder['shipment_id'])
-                        ? $srOrder['shipment_id'][0]
-                        : $srOrder['shipment_id'];
-
-                    $awbResponse = $shiprocket->assignAwb($shipmentId);
-
-                    \Log::info('SR AWB RESPONSE', $awbResponse);
-
-                    $awbCode = $awbResponse['awb_code'] ?? null;
-                    $courier = $awbResponse['courier_name'] ?? null;
-
-                    $pickupResponse = $shiprocket->generatePickup($shipmentId);
-
-                    \Log::info('SR PICKUP RESPONSE', $pickupResponse);
-
-                    $order->update([
-                        'shipment_id' => $shipmentId,
-                        'awb_code' => $awbCode,
-                        'courier_name' => $courier,
-                        'shipping_status' => 'created'
-                    ]);
-                }
-
-            } catch (\Exception $e) {
-
-                \Log::error('SHIPROCKET ERROR', [
-                    'message' => $e->getMessage()
-                ]);
-            }
-
+            // WALLET DEDUCT AFTER ORDER CREATE
             if ($walletUsed > 0) {
 
                 $wallet->refresh();
@@ -412,7 +371,7 @@ class StoreRazorpayPaymentController extends Controller
 
                 StoreWalletTransaction::create([
                     'user_id' => $user->id,
-                    'order_id' => $order->id, 
+                    'order_id' => $order->id, // ✅ FIXED
                     'type' => 'debit',
                     'amount' => $walletUsed,
                     'source' => 'order_payment',
@@ -429,48 +388,96 @@ class StoreRazorpayPaymentController extends Controller
                     ->get()
                     ->keyBy('id');
 
+                $totalWeight = 0;
+                $maxLength = 0;
+                $maxBreadth = 0;
+                $totalHeight = 0;
+
                 foreach ($items as $item) {
 
-                $product = $products[$item->product_id] ?? null;
+                    $product = $products[$item->product_id] ?? null;
 
-                if (!$product) {
-                    throw new \Exception('Product not found');
+                    if (!$product) {
+                        throw new \Exception('Product not found');
+                    }
+
+                    if ($product->stock_qty < $item->quantity) {
+                        throw new \Exception(($product->name ?? 'Product') . ' out of stock');
+                    }
+
+                    $newStock = $product->stock_qty - $item->quantity;
+
+                    $status = 'in_stock';
+                    if ($newStock == 0) {
+                        $status = 'out_of_stock';
+                    } elseif ($newStock <= 5) {
+                        $status = 'few_left';
+                    }
+
+                    $product->update([
+                        'stock_qty' => $newStock,
+                        'stock_status' => $status
+                    ]);
+
+                    $totalWeight += (($product->weight ?? 0) * $item->quantity);
+
+                    $maxLength = max($maxLength, $product->length ?? 0);
+                    $maxBreadth = max($maxBreadth, $product->breadth ?? 0);
+                    $totalHeight += (($product->height ?? 0) * $item->quantity);
+
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'product_id' => $item->product_id,
+                        'product_name' => $item->product->name ?? '',
+                        'product_slug' => $item->product->slug ?? '',
+                        'product_image' => $item->product->image ?? '',
+                        'ratti' => $item->ratti,
+                        'quantity' => $item->quantity,
+                        'price' => $item->price_at_time,
+                        'total' => $item->total_price,
+                        'weight' => $product->weight,
+                        'length' => $product->length,
+                        'breadth' => $product->breadth,
+                        'height' => $product->height,
+                    ]);
                 }
 
-                if ($product->stock_qty < $item->quantity) {
-                    throw new \Exception(($product->name ?? 'Product') . ' out of stock');
-                }
-
-                $newStock = $product->stock_qty - $item->quantity;
-
-                $status = 'in_stock';
-                if ($newStock == 0) {
-                    $status = 'out_of_stock';
-                } elseif ($newStock <= 5) {
-                    $status = 'few_left';
-                }
-
-                $product->update([
-                    'stock_qty' => $newStock,
-                    'stock_status' => $status
-                ]);
-
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item->product_id,
-                    'product_name' => $item->product->name ?? '',
-                    'product_slug' => $item->product->slug ?? '',
-                    'product_image' => $item->product->image ?? '',
-                    'ratti' => $item->ratti,
-                    'quantity' => $item->quantity,
-                    'price' => $item->price_at_time,
-                    'total' => $item->total_price
-                ]);
-                }
+            $order->update([
+                'total_weight' => $totalWeight,
+                'box_length' => $maxLength,
+                'box_breadth' => $maxBreadth,
+                'box_height' => $totalHeight,
+            ]);
 
             CartItem::where('cart_id', $cart->id)->delete();
 
             DB::commit();
+
+            $order->refresh()->load(['items', 'user']);
+
+            $shipwayResponse = ShipwayService::pushOrder($order);
+
+            if (!empty($shipwayResponse) && ($shipwayResponse['success'] ?? false)) {
+
+                $shipmentId = $shipwayResponse['shipment_id'] ?? null;
+                $awb = $shipwayResponse['awb_code'] ?? null;
+                $courier = $shipwayResponse['courier_name'] ?? null;
+
+                if (!$awb && isset($shipwayResponse['data'])) {
+                    $shipmentId = $shipwayResponse['data']['shipment_id'] ?? null;
+                    $awb = $shipwayResponse['data']['awb_code'] ?? null;
+                    $courier = $shipwayResponse['data']['courier_name'] ?? null;
+                }
+
+                $order->update([
+                    'shipping_status' => 'pending'
+                ]);
+
+            } else {
+                $order->update([
+                    'shipping_status' => 'failed'
+                ]);
+            }
 
             return response()->json([
                 'status' => true,
@@ -497,6 +504,33 @@ class StoreRazorpayPaymentController extends Controller
                 'message' => $this->isTest ? $e->getMessage() : 'Payment failed'
             ], 500);
         }
+    }
+
+    public function webhook(Request $request)
+    {
+        \Log::info('SHIPWAY WEBHOOK', $request->all());
+
+        $order = Order::where('order_number', $request->order_id)->first();
+
+        if (!$order) {
+            return response()->json(['status' => 'order not found']);
+        }
+
+        $order->update([
+            'awb_code' => $request->awb ?? $order->awb_code,
+            'shipment_id' => $request->shipment_id ?? $order->shipment_id,
+            'courier_name' => $request->courier_name ?? $order->courier_name,
+            'shipping_status' => $request->current_status ?? 'assigned',
+        ]);
+
+        if ($request->current_status === 'delivered' && $order->status !== 'delivered') {
+            $order->update([
+                'status' => 'delivered',
+                'delivered_at' => now()
+            ]);
+        }
+
+        return response()->json(['status' => 'ok']);
     }
 
     public function cancelOrder($id)
@@ -608,10 +642,15 @@ class StoreRazorpayPaymentController extends Controller
             // 🔥 ORDER UPDATE
             $order->update([
                 'status' => 'cancelled',
+                'shipping_status' => 'cancelled',
                 'cancelled_at' => now()
             ]);
 
             DB::commit();
+
+            if ($order->awb_code) {
+                ShipwayService::cancelShipment($order);
+            }
 
             return response()->json([
                 'status' => true,
