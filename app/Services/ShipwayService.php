@@ -22,7 +22,12 @@ class ShipwayService
                 ?? $order->user->email 
                 ?? 'customer@email.com';
 
-            $name = $order->user->name ?? 'Customer';
+            $fullName = trim($order->user->name ?? 'Customer');
+
+            $nameParts = preg_split('/\s+/', $fullName, 2);
+
+            $firstName = $nameParts[0] ?? 'Customer';
+            $lastName  = $nameParts[1] ?? '';
 
             $country = $order->country ?? 'India';
 
@@ -57,7 +62,8 @@ class ShipwayService
                 "billing_city"      => $order->city,
                 "billing_state"     => $order->state,
                 "billing_country"   => $country,
-                "billing_firstname" => $name,
+                "billing_firstname" => $firstName,
+                "billing_lastname"  => $lastName,
                 "billing_phone"     => $order->mobile,
                 "billing_zipcode"   => $order->pincode,
 
@@ -65,7 +71,8 @@ class ShipwayService
                 "shipping_city"      => $order->city,
                 "shipping_state"     => $order->state,
                 "shipping_country"   => $country,
-                "shipping_firstname" => $name,
+                "shipping_firstname" => $firstName,
+                "shipping_lastname"  => $lastName,
                 "shipping_phone"     => $order->mobile,
                 "shipping_zipcode"   => $order->pincode,
 
