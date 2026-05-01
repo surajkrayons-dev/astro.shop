@@ -16,6 +16,7 @@ use DB;
 class OrderApiController extends Controller
 {
     // ✅ PLACE ORDER
+    // not in use yet, will be used in future when we implement checkout flow
     public function place(Request $request)
     {
         $request->validate([
@@ -226,6 +227,18 @@ class OrderApiController extends Controller
                 'method' => $order->wallet_used ? 'wallet' : 'online',
             ],
 
+            // 🔥 SHIPPING INFO
+            'shipment_id' => $order->shipment_id,
+            'awb_code' => $order->awb_code,
+            'courier_name' => $order->courier_name,
+            'shipping_status' => $order->shipping_status,
+
+            // 📦 BOX DETAILS
+            'total_weight' => $order->total_weight,
+            'box_length' => $order->box_length,
+            'box_breadth' => $order->box_breadth,
+            'box_height' => $order->box_height,
+
             // 📍 ADDRESS
             'address' => [
                 'snapshot' => [
@@ -285,6 +298,12 @@ class OrderApiController extends Controller
                     'quantity' => $item->quantity,
                     'price' => $item->price,
                     'total' => $item->total,
+
+                    // 📦 ITEM DIMENSIONS
+                    'weight' => $item->weight,
+                    'length' => $item->length,
+                    'breadth' => $item->breadth,
+                    'height' => $item->height,
                 ];
             }),
 
