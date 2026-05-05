@@ -87,18 +87,8 @@ class UserApiController extends Controller
             ], 422);
         }
 
-       $loginInput = $request->username;
-
-        if (filter_var($loginInput, FILTER_VALIDATE_EMAIL)) {
-            $fieldType = 'email';
-        } elseif (preg_match('/^[0-9]{10}$/', $loginInput)) {
-            $fieldType = 'mobile';
-        } else {
-            $fieldType = 'username';
-        }
-
         $user = User::where('type', 'user')
-            ->where($fieldType, $loginInput)
+            ->where('username', $request->username)
             ->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {

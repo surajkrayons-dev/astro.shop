@@ -60,20 +60,7 @@ class AuthController extends Controller
         }
 
         $remember = $request->remember_me == 1;
-        $loginInput = strtolower($request->username);
-
-        if (filter_var($loginInput, FILTER_VALIDATE_EMAIL)) {
-            $fieldType = 'email';
-        } elseif (preg_match('/^[0-9]{10}$/', $loginInput)) {
-            $fieldType = 'mobile';
-        } else {
-            $fieldType = 'username';
-        }
-
-        $credentials = [
-            $fieldType => $loginInput,
-            'password' => $request->password
-        ];
+        $credentials = $request->only('username', 'password');
 
         if (!\Auth::attempt($credentials, $remember)) {
             return response()->json(['message' => 'The combination of username & password is not registered with us.'], 422);
