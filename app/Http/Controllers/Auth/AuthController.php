@@ -74,6 +74,7 @@ class AuthController extends Controller
             $fieldType => $loginInput,
             'password' => $request->password
         ];
+        
 
         if (!\Auth::attempt($credentials, $remember)) {
             return response()->json(['message' => 'The combination of username & password is not registered with us.'], 422);
