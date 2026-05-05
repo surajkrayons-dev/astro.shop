@@ -221,10 +221,24 @@ class OrderApiController extends Controller
             ],
 
             // 💳 PAYMENT
-            'payment' => [
-                'payment_id' => $order->payment_id,
+            'payment' => $order->payment ? [
+                'payment_id' => $order->payment->id,
+                'transaction_id' => $order->payment->transaction_id,
+                'gateway' => $order->payment->payment_gateway,
+                'mode' => $order->payment->payment_mode,
+                'amount' => $order->payment->amount,
+                'currency' => $order->payment->currency,
+                'status' => $order->payment->payment_status,
                 'paid_at' => $order->paid_at,
-                'method' => $order->wallet_used ? 'wallet' : 'online',
+            ] : [
+                'payment_id' => null,
+                'transaction_id' => null,
+                'gateway' => 'wallet',
+                'mode' => 'wallet_only',
+                'amount' => 0,
+                'currency' => 'INR',
+                'status' => 'success',
+                'paid_at' => $order->paid_at,
             ],
 
             // 🔥 SHIPPING INFO

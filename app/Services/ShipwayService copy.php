@@ -46,10 +46,6 @@ class ShipwayService
             $body = [
 
                 "order_id" => $order->order_number,
-                
-                "auto_assign" => "1",
-                "generate_label" => "1",
-                "pickup_location" => "Shipment",
 
                 "products" => $products,
 
@@ -107,23 +103,10 @@ class ShipwayService
 
             if ($response->successful() && ($data['success'] ?? false)) {
 
-                $shipmentId = $data['shipment_id'] ?? null;
-                $awb = $data['awb_code'] ?? null;
-                $courier = $data['courier_name'] ?? null;
-            
-                if (!$awb && isset($data['data'])) {
-                    $shipmentId = $data['data']['shipment_id'] ?? null;
-                    $awb = $data['data']['awb_code'] ?? null;
-                    $courier = $data['data']['courier_name'] ?? null;
-                }
-            
                 $order->update([
-                    'shipment_id' => $shipmentId,
-                    'awb_code' => $awb,
-                    'courier_name' => $courier,
-                    'shipping_status' => 'assigned'
+                    'shipping_status' => 'pending'
                 ]);
-            
+
                 return $data;
             }
 
@@ -160,7 +143,7 @@ class ShipwayService
                     'Accept'        => 'application/json',
                 ])
                 ->post('https://app.shipway.com/api/Cancelorders/', [
-                    "order_ids" => json_encode([$order->order_number])
+                    "order_ids" => [$order->order_number]
                 ]);
 
             \Log::info('SHIPWAY CANCEL RESPONSE', [
@@ -168,16 +151,8 @@ class ShipwayService
                 'status' => $response->status(),
                 'body' => $response->body()
             ]);
-            
-            $data = $response->json();
 
-            if (!empty($data[0]['success'])) {
-                $order->update([
-                    'shipping_status' => 'cancelled'
-                ]);
-            }
-            
-            return $data;
+            return $response->json();
 
         } catch (\Exception $e) {
             \Log::error('SHIPWAY CANCEL ERROR', [
