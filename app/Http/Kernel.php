@@ -67,5 +67,6 @@ class Kernel extends HttpKernel
         'astro' => \App\Http\Middleware\EnsureAstro::class,
         'user'  => \App\Http\Middleware\EnsureUser::class,
         'employee' => \App\Http\Middleware\EmployeeMiddleware::class,
+        'session.timeout' => \App\Http\Middleware\CheckUserSessionTimeout::class,
     ];
 }

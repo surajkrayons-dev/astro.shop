@@ -45,6 +45,7 @@ Route::post('/call/webhook', [EasyGoApiController::class, 'callWebhook']);
 Route::prefix('user')->group(function () {
     Route::post('register', [UserApiController::class, 'register']);
     Route::post('login', [UserApiController::class, 'login']);
+    Route::post('verify-login-otp', [UserApiController::class, 'verifyLoginOtp']);
     Route::post('forgot-password', [UserApiController::class, 'forgotPassword']);
     Route::post('verify-otp', [UserApiController::class, 'verifyOtp']);
     Route::post('reset-password', [UserApiController::class, 'resetPassword']);
@@ -129,7 +130,8 @@ Route::prefix('astrology')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth:sanctum'])->group(function () {
+// Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'session.timeout'])->group(function () {
 
     // Razorpay
     Route::prefix('razorpay')->group(function () {

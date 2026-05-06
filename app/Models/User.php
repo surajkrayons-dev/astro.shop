@@ -32,6 +32,7 @@ class User extends Authenticatable
         'family_astrology_details',
         'daily_available_hours',
         'otp',
+        'otp_created_at',
 
         // ROLE & ACCESS
         'type',

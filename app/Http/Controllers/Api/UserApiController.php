@@ -7,8 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Intervention\Image\Facades\Image;
-use App\Models\CallSession;
-use App\Models\ChatSession;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\Review;
@@ -22,8 +20,6 @@ class UserApiController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'mobile'   => 'required|digits:10|unique:users,mobile',
-            'username' => 'required|string|max:255|unique:users,username',
-            'password' => 'required|string|min:6',
             'profile_image' => 'nullable|string',
             'terms_accepted' => 'required|in:0,1',
         ]);
@@ -35,6 +31,14 @@ class UserApiController extends Controller
             ], 422);
         }
 
+        $username = $request->mobile;
+
+        if (User::where('username', $username)->exists()) {
+            $username = explode('@', $request->email)[0] . rand(100,999);
+        }
+
+        $autoPassword = substr($request->mobile, -4) . now()->format('dmY');
+
         $user = User::create([
             'type' => 'user',
             'role_id' => 3,
@@ -44,8 +48,8 @@ class UserApiController extends Controller
             'name' => $request->name,
             'email' => strtolower($request->email),
             'mobile' => $request->mobile,
-            'username' => strtolower($request->username),
-            'password' => bcrypt($request->password),
+            'username' => $username,
+            'password' => bcrypt($autoPassword),
 
             'status' => 1,
         ]);
@@ -68,6 +72,12 @@ class UserApiController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'User registered successfully',
+
+            'credentials' => [
+                'username' => $username,
+                'password' => $autoPassword,
+            ],
+
             'token' => $user->createToken('auth_token')->plainTextToken,
             'user' => $user->load('wallet'),
         ]);
@@ -76,8 +86,7 @@ class UserApiController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'username' => 'required',
-            'password' => 'required',
+            'email' => 'required|email',
         ]);
 
         if ($validator->fails()) {
@@ -87,35 +96,94 @@ class UserApiController extends Controller
             ], 422);
         }
 
-       $loginInput = $request->username;
-
-        if (filter_var($loginInput, FILTER_VALIDATE_EMAIL)) {
-            $fieldType = 'email';
-        } elseif (preg_match('/^[0-9]{10}$/', $loginInput)) {
-            $fieldType = 'mobile';
-        } else {
-            $fieldType = 'username';
-        }
-
-        $user = User::where('type', 'user')
-            ->where($fieldType, $loginInput)
+        $user = User::where('email', strtolower($request->email))
+            ->where('type', 'user')
             ->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (!$user) {
+
             return response()->json([
                 'status' => false,
-                'message' => 'Invalid username or password',
-            ], 401);
+                'message' => 'Account not found',
+                'new_user' => true
+            ], 404);
         }
 
-        if (! $user->status) {
+        if (!$user->status) {
             return response()->json([
                 'status' => false,
-                'message' => 'Account is inactive',
+                'message' => 'Account inactive',
             ], 403);
         }
 
+        $otp = rand(100000, 999999);
+
         $user->update([
+            'otp' => $otp,
+            'otp_created_at' => now(),
+        ]);
+
+        $mailData = [
+            'name' => $user->name,
+            'otp'  => $otp,
+        ];
+
+        \Mail::to($user->email)
+            ->send(new \App\Mail\LoginOtpMail($mailData));
+
+        return response()->json([
+            'status' => true,
+            'message' => 'OTP sent successfully',
+        ]);
+    }
+
+    public function verifyLoginOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'otp'   => 'required|digits:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $user = User::where('email', strtolower($request->email))
+            ->where('type', 'user')
+            ->first();
+
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        if ($user->otp != $request->otp) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid OTP',
+            ], 400);
+        }
+
+        if (
+            !$user->otp_created_at ||
+            \Carbon\Carbon::parse($user->otp_created_at)
+                ->diffInMinutes(now()) > 10
+        ) {
+
+            return response()->json([
+                'status' => false,
+                'message' => 'OTP expired',
+            ], 400);
+        }
+
+        $user->update([
+            'otp' => null,
+            'otp_created_at' => null,
             'is_online' => 1,
             'last_seen_at' => now(),
         ]);
@@ -132,97 +200,11 @@ class UserApiController extends Controller
 
     public function profile(Request $request)
     {
-        $user = auth()->user()->load(['wallet']);
+        $user = auth()->user();
 
         $perPage = (int) $request->get('per_page', 20);
-        // call_page, chat_page, recharge_page, reviews_page
 
-        /* ================= TODAY SUMMARY ================= */
-        $todayCall = CallSession::where('user_id', $user->id)
-            ->where('status', 'completed')
-            ->whereDate('started_at', today())
-            ->sum('amount');
-
-        $todayChat = ChatSession::where('user_id', $user->id)
-            ->where('status', 'completed')
-            ->whereDate('started_at', today())
-            ->sum('amount');
-
-        $todayRecharge = DB::table('wallet_recharges')
-            ->where('wallet_id', optional($user->wallet)->id)
-            ->whereDate('recharged_at', today())
-            ->sum('amount');
-
-        /* ================= LIFETIME SUMMARY ================= */
-        $totalCall = CallSession::where('user_id', $user->id)
-            ->where('status', 'completed')
-            ->sum('amount');
-
-        $totalChat = ChatSession::where('user_id', $user->id)
-            ->where('status', 'completed')
-            ->sum('amount');
-
-        $totalRecharge = DB::table('wallet_recharges')
-            ->where('wallet_id', optional($user->wallet)->id)
-            ->sum('amount');
-
-        /* ================= CALL HISTORY (PAGINATED) ================= */
-        $callPaginator = CallSession::where('user_id', $user->id)
-            ->with('astrologer:id,name,code')
-            ->orderByDesc('started_at')
-            ->paginate($perPage, ['*'], 'call_page');
-
-        $callPaginator->getCollection()->transform(function ($c) {
-            return [
-                'id' => $c->id,
-                'astrologer_name' => $c->astrologer->name ?? null,
-                'astrologer_code' => $c->astrologer->code ?? null,
-                'started_at' => $c->started_at,
-                'ended_at' => $c->ended_at,
-                'duration_minutes' => $c->duration,
-                'amount' => (float) $c->amount,
-                'status' => $c->status,
-            ];
-        });
-
-        /* ================= CHAT HISTORY (PAGINATED) ================= */
-        $chatPaginator = ChatSession::where('user_id', $user->id)
-            ->with('astrologer:id,name,code')
-            ->orderByDesc('started_at')
-            ->paginate($perPage, ['*'], 'chat_page');
-
-        $chatPaginator->getCollection()->transform(function ($c) {
-            return [
-                'id' => $c->id,
-                'astrologer_name' => $c->astrologer->name ?? null,
-                'astrologer_code' => $c->astrologer->code ?? null,
-                'started_at' => $c->started_at,
-                'ended_at' => $c->ended_at,
-                'duration_minutes' => $c->duration,
-                'amount' => (float) $c->amount,
-                'status' => $c->status,
-            ];
-        });
-
-        /* ================= RECHARGE HISTORY (PAGINATED) ================= */
-        $rechargeQuery = DB::table('wallet_recharges')
-            ->where('wallet_id', optional($user->wallet)->id)
-            ->orderByDesc('recharged_at');
-
-        $rechargePaginator = $rechargeQuery->paginate($perPage, ['*'], 'recharge_page');
-
-        // map recharge items to consistent structure
-        $rechargePaginator->getCollection()->transform(function ($r) {
-            return [
-                'id' => $r->id ?? null,
-                'amount' => (float) ($r->amount ?? $r->recharge_amount ?? 0),
-                'method' => $r->payment_method ?? null,
-                'recharged_at' => $r->recharged_at ?? $r->created_at ?? null,
-                'status' => $r->status ?? null,
-            ];
-        });
-
-        /* ================= REVIEWS GIVEN (PAGINATED) ================= */
+        /* ================= REVIEWS GIVEN ================= */
         $reviewsQuery = Review::where('user_id', $user->id)
             ->with('astrologer:id,name,code')
             ->orderByDesc('created_at');
@@ -240,7 +222,6 @@ class UserApiController extends Controller
             ];
         });
 
-        /* ================= RESPONSE ================= */
         return response()->json([
             'status' => true,
 
@@ -259,60 +240,9 @@ class UserApiController extends Controller
                 'about' => $user->about,
                 'address' => $user->address,
                 'pincode' => $user->pincode,
-                'profile_image' => $user->profile_image ? asset('storage/user/'.$user->profile_image) : null,
-            ],
-
-            'wallet' => [
-                'balance' => (float) ($user->wallet?->balance ?? 0),
-                'total_added' => (float) ($user->wallet?->total_added ?? 0),
-                'total_spent' => (float) ($user->wallet?->total_spent ?? 0),
-                'last_recharge_amount' => (float) ($user->wallet?->last_recharge_amount ?? 0),
-                'last_recharge_at' => $user->wallet?->last_recharge_at,
-            ],
-
-            'today_summary' => [
-                'call_spent' => (float) $todayCall,
-                'chat_spent' => (float) $todayChat,
-                'total_spent' => (float) ($todayCall + $todayChat),
-                'recharged' => (float) $todayRecharge,
-            ],
-
-            'lifetime_summary' => [
-                'call_spent' => (float) $totalCall,
-                'chat_spent' => (float) $totalChat,
-                'total_spent' => (float) ($totalCall + $totalChat),
-                'total_recharged' => (float) $totalRecharge,
-            ],
-
-            // paginated sections
-            'call_history' => [
-                'data' => $callPaginator->items(),
-                'meta' => [
-                    'current_page' => $callPaginator->currentPage(),
-                    'last_page' => $callPaginator->lastPage(),
-                    'per_page' => $callPaginator->perPage(),
-                    'total' => $callPaginator->total(),
-                ],
-            ],
-
-            'chat_history' => [
-                'data' => $chatPaginator->items(),
-                'meta' => [
-                    'current_page' => $chatPaginator->currentPage(),
-                    'last_page' => $chatPaginator->lastPage(),
-                    'per_page' => $chatPaginator->perPage(),
-                    'total' => $chatPaginator->total(),
-                ],
-            ],
-
-            'recharge_history' => [
-                'data' => $rechargePaginator->items(),
-                'meta' => [
-                    'current_page' => $rechargePaginator->currentPage(),
-                    'last_page' => $rechargePaginator->lastPage(),
-                    'per_page' => $rechargePaginator->perPage(),
-                    'total' => $rechargePaginator->total(),
-                ],
+                'profile_image' => $user->profile_image
+                    ? asset('storage/user/'.$user->profile_image)
+                    : null,
             ],
 
             'reviews_given' => [
@@ -586,6 +516,7 @@ class UserApiController extends Controller
 
         $user->update([
             'otp' => $otp,
+            'otp_created_at' => now(),
         ]);
 
         $mailData = [
@@ -635,12 +566,22 @@ class UserApiController extends Controller
             ], 400);
         }
 
-        if ($user->updated_at->diffInMinutes(now()) > 10) {
+        if (
+            !$user->otp_created_at ||
+            \Carbon\Carbon::parse($user->otp_created_at)
+                ->diffInMinutes(now()) > 10
+        ) {
+
             return response()->json([
                 'status' => false,
                 'message' => 'OTP expired',
             ], 400);
         }
+
+        $user->update([
+            'otp' => null,
+            'otp_created_at' => null,
+        ]);
 
         return response()->json([
             'status' => true,
@@ -677,6 +618,7 @@ class UserApiController extends Controller
         $user->update([
             'password' => bcrypt($request->password),
             'otp' => null,
+            'otp_created_at' => null,
         ]);
 
         $user->tokens()->delete();
