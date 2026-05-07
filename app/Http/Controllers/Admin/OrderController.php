@@ -92,10 +92,12 @@ class OrderController extends Controller
             'user',
             'payment',
             'coupon',
+            'addressData',
             'items',
             'items.product' => function ($q) {
                 $q->withTrashed();
             },
+            'items.product.images',
             'items.product.category',
             'items.product.storeReviews' => function ($q) {
                 $q->select('id','product_id','user_id','rating','review');

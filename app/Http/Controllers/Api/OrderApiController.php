@@ -143,7 +143,7 @@ class OrderApiController extends Controller
     // ✅ ORDER LIST
     public function index(Request $request)
     {
-        $orders = Order::with(['items.product.images', 'coupon', 'addressData'])
+        $orders = Order::with(['items.product.images', 'coupon', 'addressData', 'payment'])
             ->where('user_id', $request->user()->id)
             ->latest()
             ->get();
@@ -157,7 +157,7 @@ class OrderApiController extends Controller
     // ✅ ORDER DETAIL
     public function show(Request $request, $id)
     {
-        $order = Order::with(['items.product.images', 'coupon', 'addressData'])
+        $order = Order::with(['items.product.images', 'coupon', 'addressData', 'payment'])
             ->where('user_id', $request->user()->id)
             ->findOrFail($id);
 
@@ -194,7 +194,7 @@ class OrderApiController extends Controller
     // ✅ FORMAT ORDER
     private function formatOrder($id)
     {
-        $order = Order::with(['items.product.images', 'coupon', 'addressData'])->find($id);
+        $order = Order::with(['items.product.images', 'coupon', 'addressData', 'payment'])->find($id);
         return $this->formatOrderData($order);
     }
 
