@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\AdminController;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -15,59 +18,124 @@ class DashboardController extends AdminController
         return view('admin.dashboard.index');
     }
 
-    /**
-     * TOP STATS
-     */
     public function getStats(Request $request)
     {
-        $today = now()->toDateString();
+        $start = Carbon::parse($request->start_date)
+            ->startOfDay();
+
+        $end = Carbon::parse($request->end_date)
+            ->endOfDay();
 
         return response()->json([
-            'total_astrologers' => User::where('type', 'astro')->count(),
-            'total_users'       => User::where('type', 'user')->count(),
 
-            'online_astrologers' => User::where('type', 'astro')
-                ->where('is_online', 1)
-                ->whereDate('updated_at', $today)
+            'total_users' => User::where('type', 'user')
+                ->whereBetween('created_at', [$start, $end])
                 ->count(),
 
             'online_users' => User::where('type', 'user')
                 ->where('is_online', 1)
-                ->whereDate('updated_at', $today)
+                ->whereBetween('updated_at', [$start, $end])
                 ->count(),
 
-            'active_call_connections' => DB::table('call_sessions')
-                ->where('status', 'active')
-                ->whereDate('created_at', $today)
+            'total_orders' => Order::whereBetween('created_at', [$start, $end])
                 ->count(),
 
-            'active_chat_connections' => DB::table('chat_sessions')
-                ->where('status', 'active')
-                ->whereDate('created_at', $today)
+            'pending_orders' => Order::whereIn('status', [
+                    'pending',
+                    'paid',
+                    'packed',
+                    'shipped',
+                    'delivered',
+                    'cancelled'
+                ])
+                ->where('status', '!=', 'cancelled')
+                ->whereBetween('created_at', [$start, $end])
                 ->count(),
+
+            'delivered_orders' => Order::where('status', 'delivered')
+                ->where('status', '!=', 'cancelled')
+                ->whereBetween('created_at', [$start, $end])
+                ->count(),
+
+            'cancelled_orders' => Order::where('status', 'cancelled')
+                ->whereBetween('created_at', [$start, $end])
+                ->count(),
+
+            'total_products' => Product::count(),
+
+            'total_revenue' => Order::where('status', '!=', 'cancelled')
+                ->whereBetween('created_at', [$start, $end])
+                ->sum('paid_amount'),
         ]);
     }
 
-
-    /**
-     * GRAPH 1 – PLATFORM GROWTH
-     */
-    public function getGrowthGraph(Request $request)
+    public function getSalesGraph(Request $request)
     {
         $start = Carbon::parse($request->start_date)->startOfDay()->toDateString();
-        $end   = Carbon::parse($request->end_date)->endOfDay()->toDateString();
+
+        $end = Carbon::parse($request->end_date)
+            ->endOfDay()
+            ->toDateString();
 
         $dates = $this->getDaysBetweenDates($start, $end);
 
-        $astro = User::selectRaw("COUNT(id) as total, DATE(created_at) as date")
-            ->where('type', 'astro')
+        $orders = Order::selectRaw("
+                COUNT(id) as total,
+                DATE(created_at) as date
+            ")
             ->whereDate('created_at', '>=', $start)
             ->whereDate('created_at', '<=', $end)
             ->groupBy('date')
             ->pluck('total', 'date')
             ->toArray();
 
-        $users = User::selectRaw("COUNT(id) as total, DATE(created_at) as date")
+        $revenues = Order::selectRaw("
+            SUM(paid_amount) as total,
+            DATE(created_at) as date
+        ")
+        ->where('status', '!=', 'cancelled')
+            ->whereDate('created_at', '>=', $start)
+            ->whereDate('created_at', '<=', $end)
+            ->groupBy('date')
+            ->pluck('total', 'date')
+            ->toArray();
+
+        $labels = [];
+        $orderData = [];
+        $revenueData = [];
+
+        foreach ($dates['dates'] as $date) {
+
+            $normalized = Carbon::parse($date)->toDateString();
+
+            $labels[] = $normalized;
+
+            $orderData[] = $orders[$normalized] ?? 0;
+
+            $revenueData[] = $revenues[$normalized] ?? 0;
+        }
+
+        return response()->json([
+            'labels' => $labels,
+            'orders' => $orderData,
+            'revenue' => $revenueData,
+        ]);
+    }
+
+    public function getUserGraph(Request $request)
+    {
+        $start = Carbon::parse($request->start_date)->startOfDay()->toDateString();
+
+        $end = Carbon::parse($request->end_date)
+            ->endOfDay()
+            ->toDateString();
+
+        $dates = $this->getDaysBetweenDates($start, $end);
+
+        $registrations = User::selectRaw("
+                COUNT(id) as total,
+                DATE(created_at) as date
+            ")
             ->where('type', 'user')
             ->whereDate('created_at', '>=', $start)
             ->whereDate('created_at', '<=', $end)
@@ -75,59 +143,59 @@ class DashboardController extends AdminController
             ->pluck('total', 'date')
             ->toArray();
 
-        $labels = $astrologers = $customers = [];
-
-        foreach ($dates['dates'] as $date) {
-            $normalized = Carbon::parse($date)->toDateString();
-
-            $labels[]      = $normalized;
-            $astrologers[] = $astro[$normalized] ?? 0;
-            $customers[]   = $users[$normalized] ?? 0;
-        }
-
-        return response()->json(compact('labels', 'astrologers', 'customers'));
-    }
-
-    /**
-     * GRAPH 2 – ENGAGEMENT
-     */
-    public function getEngagementGraph(Request $request)
-    {
-        $start = Carbon::parse($request->start_date)->startOfDay()->toDateString();
-        $end   = Carbon::parse($request->end_date)->endOfDay()->toDateString();
-
-        $dates = $this->getDaysBetweenDates($start, $end);
-
-        $calls = DB::table('call_sessions')
-            ->selectRaw("COUNT(id) as total, DATE(created_at) as date")
-            ->whereDate('created_at', '>=', $start)
-            ->whereDate('created_at', '<=', $end)
+        $onlineUsers = User::selectRaw("
+                COUNT(id) as total,
+                DATE(updated_at) as date
+            ")
+            ->where('type', 'user')
+            ->where('is_online', 1)
+            ->whereDate('updated_at', '>=', $start)
+            ->whereDate('updated_at', '<=', $end)
             ->groupBy('date')
             ->pluck('total', 'date')
             ->toArray();
 
-        $chats = DB::table('chat_sessions')
-            ->selectRaw("COUNT(id) as total, DATE(created_at) as date")
-            ->whereDate('created_at', '>=', $start)
-            ->whereDate('created_at', '<=', $end)
-            ->groupBy('date')
-            ->pluck('total', 'date')
-            ->toArray();
-
-        $labels = $callData = $chatData = [];
+        $labels = [];
+        $registerData = [];
+        $onlineData = [];
 
         foreach ($dates['dates'] as $date) {
+
             $normalized = Carbon::parse($date)->toDateString();
-            $labels[]   = $normalized;
-            $callData[] = $calls[$normalized] ?? 0;
-            $chatData[] = $chats[$normalized] ?? 0;
+
+            $labels[] = $normalized;
+
+            $registerData[] = $registrations[$normalized] ?? 0;
+
+            $onlineData[] = $onlineUsers[$normalized] ?? 0;
         }
 
         return response()->json([
             'labels' => $labels,
-            'calls'  => $callData,
-            'chats'  => $chatData,
+            'registrations' => $registerData,
+            'online_users' => $onlineData,
         ]);
+    }
+
+    public function getTopProducts()
+    {
+        return OrderItem::select(
+                'product_name',
+                DB::raw('SUM(quantity) as total_qty'),
+                DB::raw('SUM(total) as revenue')
+            )
+            ->groupBy('product_name')
+            ->orderByDesc('total_qty')
+            ->limit(10)
+            ->get();
+    }
+
+    public function getLowStockProducts()
+    {
+        return Product::where('stock_qty', '<=', 5)
+            ->orderBy('stock_qty')
+            ->limit(10)
+            ->get();
     }
 
 

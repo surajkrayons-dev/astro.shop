@@ -56,9 +56,10 @@ Route::namespace('App\Http\Controllers\Admin')
                         Route::get('/', 'DashboardController@getIndex')->name('index');
                         Route::get('/navigation', 'DashboardController@getNav')->name('navigation');
                         Route::get('/stats', 'DashboardController@getStats')->name('stats');
-                        Route::get('/orders/graph', 'DashboardController@getOrdersGraph')->name('orders.graph');
-                        Route::get('/graph/growth', 'DashboardController@getGrowthGraph')->name('graph.growth');
-                        Route::get('/graph/engagement', 'DashboardController@getEngagementGraph')->name('graph.engagement');
+                        Route::get('/graph/growth', 'DashboardController@getSalesGraph')->name('graph.growth');
+                        Route::get('/graph/engagement', 'DashboardController@getUserGraph')->name('graph.engagement');
+                        Route::get('/top-products', 'DashboardController@getTopProducts')->name('top.products');
+                        Route::get('/low-stock-products', 'DashboardController@getLowStockProducts')->name('low.stock.products');
                         Route::get('/login/requested', 'DashboardController@getLoginRequested')->name('login.requested');
                         Route::get('/login/request/status', 'DashboardController@getLoginRequestStatus')->name('login.request.status');
                     });

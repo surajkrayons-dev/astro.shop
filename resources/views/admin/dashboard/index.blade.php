@@ -12,10 +12,14 @@
 {{-- STATS --}}
 <div class="row g-3 mb-3">
     @foreach([
-    'total_astrologers' => 'Total Astrologers',
-    'online_astrologers' => 'Astrologers Online',
-    'total_users' => 'Total Users',
-    'online_users' => 'Users Online'
+        'total_users' => 'Total Users',
+        'online_users' => 'Users Online',
+        'total_orders' => 'Total Orders',
+        'pending_orders' => 'Pending Orders',
+        'delivered_orders' => 'Delivered Orders',
+        'cancelled_orders' => 'Cancelled Orders',
+        'total_products' => 'Total Products',
+        'total_revenue' => 'Total Revenue'
     ] as $key => $label)
     <div class="col-md-3">
         <div class="card">
@@ -28,24 +32,6 @@
     @endforeach
 </div>
 
-<div class="row g-3 mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-body">
-                <p class="text-muted">Active Call Connections</p>
-                <h4 class="active_call_connections"><i class="fa fa-spinner fa-pulse"></i></h4>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-body">
-                <p class="text-muted">Active Chat Connections</p>
-                <h4 class="active_chat_connections"><i class="fa fa-spinner fa-pulse"></i></h4>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div class="row g-3 mb-4">
     <div class="col-md-12 d-flex justify-content-end align-items-center">
@@ -58,7 +44,7 @@
 <div class="row g-3">
     <div class="col-md-12">
         <div class="card">
-            <div class="card-header">Platform Growth</div>
+            <div class="card-header">Sales & Revenue Analytics</div>
             <div class="card-body">
                 <canvas id="growthChart" height="100"></canvas>
             </div>
@@ -67,7 +53,7 @@
 
     <div class="col-md-12 mt-3">
         <div class="card">
-            <div class="card-header">User Connections</div>
+            <div class="card-header">User Growth Analytics</div>
             <div class="card-body">
                 <canvas id="engagementChart" height="100"></canvas>
             </div>
@@ -137,7 +123,7 @@ const engagementChart = new Chart(document.getElementById('engagementChart'), {
 // MAIN GRAPH LOADER
 function loadGraphs(start, end) {
 
-    loadStats(); // refresh stats
+    loadStats(start, end); // refresh stats
 
     const params = {
         start_date: start.format('YYYY-MM-DD'),
@@ -147,13 +133,13 @@ function loadGraphs(start, end) {
     $.get('{{ route("admin.dashboard.graph.growth") }}', params, res => {
         growthChart.data.labels = res.labels;
         growthChart.data.datasets = [{
-                label: 'Astrologers',
-                data: res.astrologers,
+                label: 'Orders',
+                data: res.orders,
                 borderWidth: 2
             },
             {
-                label: 'Users',
-                data: res.customers,
+                label: 'Revenue',
+                data: res.revenue,
                 borderWidth: 2
             }
         ];
@@ -163,13 +149,13 @@ function loadGraphs(start, end) {
     $.get('{{ route("admin.dashboard.graph.engagement") }}', params, res => {
         engagementChart.data.labels = res.labels;
         engagementChart.data.datasets = [{
-                label: 'Call',
-                data: res.calls,
+                label: 'Registrations',
+                data: res.registrations,
                 borderWidth: 2
             },
             {
-                label: 'Chat',
-                data: res.chats,
+                label: 'Online Users',
+                data: res.online_users,
                 borderWidth: 2
             }
         ];
@@ -179,8 +165,14 @@ function loadGraphs(start, end) {
 
 
 // SUMMARY BOXES LOADER
-function loadStats() {
-    $.get('{{ route("admin.dashboard.stats") }}', res => {
+function loadStats(start, end) {
+
+    const params = {
+        start_date: start.format('YYYY-MM-DD'),
+        end_date: end.format('YYYY-MM-DD')
+    };
+
+    $.get('{{ route("admin.dashboard.stats") }}', params, res => {
         Object.keys(res).forEach(k => $('.' + k).text(res[k]));
     });
 }
