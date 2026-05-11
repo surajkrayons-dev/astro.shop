@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Razorpay\Api\Api;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Services\ShipwayService;
 use App\Models\Payment;
 use App\Models\AlternativeAddress;
 use App\Models\Product;
@@ -454,8 +453,6 @@ class StoreRazorpayPaymentController extends Controller
             DB::commit();
 
             $order->refresh()->load(['items', 'payment', 'user']);
-
-            ShipwayService::pushOrder($order);
             
             $order->refresh();
 
@@ -518,33 +515,6 @@ class StoreRazorpayPaymentController extends Controller
                 'message' => $this->isTest ? $e->getMessage() : 'Payment failed'
             ], 500);
         }
-    }
-
-    public function webhook(Request $request)
-    {
-        \Log::info('SHIPWAY WEBHOOK', $request->all());
-
-        $order = Order::where('order_number', $request->order_id)->first();
-
-        if (!$order) {
-            return response()->json(['status' => 'order not found']);
-        }
-
-        $order->update([
-            'awb_code' => $request->awb ?? $order->awb_code,
-            'shipment_id' => $request->shipment_id ?? $order->shipment_id,
-            'courier_name' => $request->courier_name ?? $order->courier_name,
-            'shipping_status' => $request->current_status ?? 'assigned',
-        ]);
-
-        if ($request->current_status === 'delivered' && $order->status !== 'delivered') {
-            $order->update([
-                'status' => 'delivered',
-                'delivered_at' => now()
-            ]);
-        }
-
-        return response()->json(['status' => 'ok']);
     }
 
     public function cancelOrder($id)
@@ -661,13 +631,6 @@ class StoreRazorpayPaymentController extends Controller
             ]);
 
             DB::commit();
-
-            if (
-                ($order->awb_code || $order->shipment_id) &&
-                $order->shipping_status !== 'cancelled'
-            ) {
-                ShipwayService::cancelShipment($order);
-            }
 
             return response()->json([
                 'status' => true,

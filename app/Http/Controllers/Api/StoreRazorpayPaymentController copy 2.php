@@ -40,7 +40,7 @@ class StoreRazorpayPaymentController extends Controller
             $walletInput = $request->wallet_amount ?? 0;
             $deliveryCharge = $request->delivery_charge ?? 0;
 
-            // 🔥 CART
+            // ðŸ”¥ CART
             $cart = Cart::where('user_id', $user->id)->firstOrFail();
             $items = CartItem::where('cart_id', $cart->id)->get();
 
@@ -50,7 +50,7 @@ class StoreRazorpayPaymentController extends Controller
 
             $subtotal = $items->sum('total_price');
 
-            // 🔥 COUPON (ONLY IF SENT)
+            // ðŸ”¥ COUPON (ONLY IF SENT)
             $discount = 0;
 
             if ($request->coupon_code) {
@@ -83,7 +83,7 @@ class StoreRazorpayPaymentController extends Controller
 
             $afterDiscount = max(0, $subtotal - $discount);
 
-            // 🔥 WALLET VALIDATION (USER CONTROLLED)
+            // ðŸ”¥ WALLET VALIDATION (USER CONTROLLED)
             $wallet = StoreWallet::firstOrCreate(['user_id' => $user->id]);
 
             if ($walletInput > $wallet->balance) {
@@ -118,7 +118,7 @@ class StoreRazorpayPaymentController extends Controller
                 ]);
             }
 
-            // 🔥 RAZORPAY
+            // ðŸ”¥ RAZORPAY
             $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
 
             $order = $api->order->create([
@@ -182,7 +182,7 @@ class StoreRazorpayPaymentController extends Controller
             $walletInput = $request->wallet_amount ?? 0;
             $deliveryCharge = $request->delivery_charge ?? 0;
 
-            // 🔥 CART
+            // ðŸ”¥ CART
             $cart = Cart::where('user_id', $user->id)->firstOrFail();
             $items = CartItem::where('cart_id', $cart->id)->get();
 
@@ -192,7 +192,7 @@ class StoreRazorpayPaymentController extends Controller
 
             $subtotal = $items->sum('total_price');
 
-            // 🔥 COUPON
+            // ðŸ”¥ COUPON
             $discount = 0;
             $couponId = null;
 
@@ -371,7 +371,7 @@ class StoreRazorpayPaymentController extends Controller
 
                 StoreWalletTransaction::create([
                     'user_id' => $user->id,
-                    'order_id' => $order->id, // ✅ FIXED
+                    'order_id' => $order->id, // âœ… FIXED
                     'type' => 'debit',
                     'amount' => $walletUsed,
                     'source' => 'order_payment',
@@ -453,41 +453,55 @@ class StoreRazorpayPaymentController extends Controller
 
             DB::commit();
 
-            $order->refresh()->load(['items', 'user']);
+            $order->refresh()->load(['items', 'payment', 'user']);
 
-            $shipwayResponse = ShipwayService::pushOrder($order);
-
-            if (!empty($shipwayResponse) && ($shipwayResponse['success'] ?? false)) {
-
-                $shipmentId = $shipwayResponse['shipment_id'] ?? null;
-                $awb = $shipwayResponse['awb_code'] ?? null;
-                $courier = $shipwayResponse['courier_name'] ?? null;
-
-                if (!$awb && isset($shipwayResponse['data'])) {
-                    $shipmentId = $shipwayResponse['data']['shipment_id'] ?? null;
-                    $awb = $shipwayResponse['data']['awb_code'] ?? null;
-                    $courier = $shipwayResponse['data']['courier_name'] ?? null;
-                }
-
-                $order->update([
-                    'shipping_status' => 'pending'
-                ]);
-
-            } else {
-                $order->update([
-                    'shipping_status' => 'failed'
-                ]);
-            }
+            ShipwayService::pushOrder($order);
+            
+            $order->refresh();
 
             return response()->json([
                 'status' => true,
                 'message' => 'Order placed successfully',
-                'pricing' => [
-                    'subtotal' => $subtotal,
-                    'discount' => $discount,
-                    'wallet_used' => $walletUsed,
-                    'delivery_charge' => $deliveryCharge,
-                    'paid_online' => $finalAmount
+            
+                'order' => [
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'status' => $order->status,
+            
+                    'pricing' => [
+                        'subtotal' => $subtotal,
+                        'discount' => $discount,
+                        'wallet_used' => $walletUsed,
+                        'delivery_charge' => $deliveryCharge,
+                        'paid_online' => $finalAmount,
+                    ],
+            
+                    'payment' => $payment ? [
+                        'transaction_id' => $payment->transaction_id,
+                        'payment_gateway' => $payment->payment_gateway,
+                        'payment_mode' => $payment->payment_mode,
+                        'amount' => $payment->amount,
+                        'currency' => $payment->currency,
+                        'status' => $payment->payment_status,
+                    ] : [
+                        'transaction_id' => null,
+                        'payment_gateway' => 'wallet',
+                        'payment_mode' => 'wallet_only',
+                        'amount' => 0,
+                        'currency' => 'INR',
+                        'status' => 'success',
+                    ],
+            
+                    'items' => $order->items->map(function ($item) {
+                        return [
+                            'product_id' => $item->product_id,
+                            'name' => $item->product_name,
+                            'image' => $item->product_image,
+                            'quantity' => $item->quantity,
+                            'price' => $item->price,
+                            'total' => $item->total,
+                        ];
+                    }),
                 ]
             ]);
 
@@ -562,7 +576,7 @@ class StoreRazorpayPaymentController extends Controller
 
             $refundAmount = $order->total_amount;
 
-            // 🔥 WALLET
+            // ðŸ”¥ WALLET
             $wallet = StoreWallet::firstOrCreate(
                 ['user_id' => $user->id],
                 ['balance' => 0, 'total_added' => 0, 'total_spent' => 0, 'total_refunded' => 0]
@@ -576,7 +590,7 @@ class StoreRazorpayPaymentController extends Controller
                 'total_refunded' => $wallet->total_refunded + $refundAmount
             ]);
 
-            // 🔥 WALLET TRANSACTION
+            // ðŸ”¥ WALLET TRANSACTION
             StoreWalletTransaction::create([
                 'user_id' => $user->id,
                 'order_id' => $order->id,
@@ -588,7 +602,7 @@ class StoreRazorpayPaymentController extends Controller
                 'note' => 'Order cancelled refund'
             ]);
 
-            // 🔥 ITEM-WISE REFUND (PROPORTIONAL)
+            // ðŸ”¥ ITEM-WISE REFUND (PROPORTIONAL)
             $totalOrderAmount = $order->total_amount;
 
             foreach ($order->items as $item) {
@@ -614,7 +628,7 @@ class StoreRazorpayPaymentController extends Controller
                     ]);
                 }
 
-                $itemTotal = $item->total; // ✅ सही column
+                $itemTotal = $item->total; // âœ… à¤¸à¤¹à¥€ column
 
                 $itemRefund = 0;
 
@@ -633,13 +647,13 @@ class StoreRazorpayPaymentController extends Controller
                 ]);
             }
 
-            // 🔥 PAYMENT UPDATE
+            // ðŸ”¥ PAYMENT UPDATE
             if ($order->payment_id) {
                 Payment::where('id', $order->payment_id)
                     ->update(['payment_status' => 'refunded']);
             }
 
-            // 🔥 ORDER UPDATE
+            // ðŸ”¥ ORDER UPDATE
             $order->update([
                 'status' => 'cancelled',
                 'shipping_status' => 'cancelled',
@@ -648,7 +662,10 @@ class StoreRazorpayPaymentController extends Controller
 
             DB::commit();
 
-            if ($order->awb_code) {
+            if (
+                ($order->awb_code || $order->shipment_id) &&
+                $order->shipping_status !== 'cancelled'
+            ) {
                 ShipwayService::cancelShipment($order);
             }
 
@@ -662,7 +679,7 @@ class StoreRazorpayPaymentController extends Controller
                     'wallet_after' => $after
                 ],
 
-                // 🔥 ADD THIS
+                // ðŸ”¥ ADD THIS
                 'pricing' => $order->price_breakdown
             ]);
 
