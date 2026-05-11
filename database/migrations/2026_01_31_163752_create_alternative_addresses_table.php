@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('country')->default('India');
             $table->text('address');
             $table->string('pincode', 10);
+            $table->tinyInteger('by_default')->default(0);
             $table->timestamps();
 
             $table->foreign('user_id')

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\users;
 use App\Models\AlternativeAddress;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AlternativeAddressApiController extends Controller
 {
@@ -34,7 +35,14 @@ class AlternativeAddressApiController extends Controller
             'country'            => 'required|string|max:255',
             'address'            => 'required|string',
             'pincode'            => 'required|string|max:10',
+            'by_default'         => 'nullable|in:0,1',
         ]);
+
+        if ($request->by_default == 1) {
+
+            AlternativeAddress::where('user_id', $request->user()->id)
+                ->update(['by_default' => 0]);
+        }
 
         $address = AlternativeAddress::create([
             'user_id'            => $request->user()->id,
@@ -48,6 +56,7 @@ class AlternativeAddressApiController extends Controller
             'country'            => $request->country,
             'address'            => $request->address,
             'pincode'            => $request->pincode,
+            'by_default'         => $request->by_default ?? 0,
         ]);
 
         return response()->json([
@@ -86,7 +95,15 @@ class AlternativeAddressApiController extends Controller
             'country'            => 'required|string|max:255',
             'address'            => 'required|string',
             'pincode'            => 'required|string|max:10',
+            'by_default'         => 'nullable|in:0,1',
         ]);
+
+        if ($request->by_default == 1) {
+
+            AlternativeAddress::where('user_id', $request->user()->id)
+                ->where('id', '!=', $address->id)
+                ->update(['by_default' => 0]);
+        }
 
         $address->update([
             'name'               => $request->name,
@@ -99,6 +116,7 @@ class AlternativeAddressApiController extends Controller
             'country'            => $request->country,
             'address'            => $request->address,
             'pincode'            => $request->pincode,
+            'by_default'        => $request->by_default ?? $address->by_default,
         ]);
 
         return response()->json([
@@ -119,6 +137,39 @@ class AlternativeAddressApiController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Address deleted successfully'
+        ]);
+    }
+
+    public function getPincodeData(Request $request)
+    {
+        $request->validate([
+            'pincode' => 'required|digits:6'
+        ]);
+
+        $data = DB::table('india_pincodes')
+            ->where('pincode', $request->pincode)
+            ->select(
+                'office_name',
+                'district as city',
+                'state',
+                'state_code',
+                'pincode'
+            )
+            ->distinct()
+            ->get();
+
+        if ($data->isEmpty()) {
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Pincode not found'
+            ]);
+        }
+
+        return response()->json([
+            'status' => true,
+            'country' => 'India',
+            'data' => $data
         ]);
     }
 }

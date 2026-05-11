@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Intervention\Image\Facades\Image;
 use App\Models\User;
+use App\Models\AlternativeAddress;
 use App\Models\Wallet;
 use App\Models\Review;
 use Illuminate\Support\Facades\DB;
@@ -202,6 +203,11 @@ class UserApiController extends Controller
     {
         $user = auth()->user();
 
+        $alternativeAddress = AlternativeAddress::where('user_id', $user->id)
+            ->where('by_default', 1)
+            ->latest()
+            ->first();
+
         $perPage = (int) $request->get('per_page', 20);
 
         /* ================= REVIEWS GIVEN ================= */
@@ -243,6 +249,21 @@ class UserApiController extends Controller
                 'profile_image' => $user->profile_image
                     ? asset('storage/user/'.$user->profile_image)
                     : null,
+                'join_us' => $user->created_at->format('d M Y h:i A'),
+
+                'alternative_address' => $alternativeAddress ? [
+                    'id' => $alternativeAddress->id,
+                    'name' => $alternativeAddress->name,
+                    'country_code' => $alternativeAddress->country_code,
+                    'mobile' => $alternativeAddress->mobile,
+                    'alternative_mobile' => $alternativeAddress->alternative_mobile,
+                    'city' => $alternativeAddress->city,
+                    'state' => $alternativeAddress->state,
+                    'country' => $alternativeAddress->country,
+                    'address' => $alternativeAddress->address,
+                    'pincode' => $alternativeAddress->pincode,
+                    'by_default' => $alternativeAddress->by_default,
+                ] : null,
             ],
 
             'reviews_given' => [

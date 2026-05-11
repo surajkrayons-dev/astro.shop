@@ -198,6 +198,7 @@ Route::middleware(['auth:sanctum', 'session.timeout'])->group(function () {
             |--------------------------------------------------------------------------
             */
             Route::get('addresses', [AlternativeAddressApiController::class, 'index']);
+            Route::post('/get-pincode-data', [AlternativeAddressApiController::class, 'getPincodeData']);
             Route::post('addresses', [AlternativeAddressApiController::class, 'store']);
             Route::get('addresses/{id}', [AlternativeAddressApiController::class, 'show']);
             Route::put('addresses/{id}', [AlternativeAddressApiController::class, 'update']);
