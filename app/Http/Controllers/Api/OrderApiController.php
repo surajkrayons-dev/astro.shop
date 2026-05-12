@@ -241,7 +241,7 @@ class OrderApiController extends Controller
                 'paid_at' => $order->paid_at,
             ] : [
                 'payment_id' => null,
-                'transaction_id' => 'WALLET-TXN-' . $order->id,
+                'transaction_id' => 'WALLET-TXN-ORDER-' . $order->id,
                 'gateway' => 'wallet',
                 'mode' => 'wallet_only',
                 'amount' => $order->wallet_used,

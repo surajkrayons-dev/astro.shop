@@ -314,9 +314,9 @@ class StoreRazorpayPaymentController extends Controller
                     ->first();
             }
 
-            $sellerStateCode = '07'; // Delhi
+            $sellerState = 'Delhi';
 
-            $gstRate = 18;
+            $gstRate = 3;
 
             $taxableAmount = round(($afterDiscount * 100) / (100 + $gstRate), 2);
 
@@ -328,10 +328,12 @@ class StoreRazorpayPaymentController extends Controller
 
             $taxType = null;
 
-            if ($address && $address->state_code == $sellerStateCode) {
-
+            if (
+                $address &&
+                strtolower(trim($address->state)) ==
+                strtolower(trim($sellerState))
+            ){
                 $taxType = 'cgst_sgst';
-
                 $cgstAmount = round($totalTax / 2, 2);
                 $sgstAmount = round($totalTax / 2, 2);
 
@@ -346,7 +348,7 @@ class StoreRazorpayPaymentController extends Controller
                 'user_id' => $user->id,
                 'user_name' => $user->name,
                 'coupon_id' => $couponId,
-                'payment_id' => $payment?->id,
+                'payment_id' => $payment ? $payment->id : null,
                 'order_number' => 'ORD-' . strtoupper(uniqid()),
 
                 'subtotal' => $subtotal,
@@ -367,7 +369,7 @@ class StoreRazorpayPaymentController extends Controller
                     'cgst_amount' => $cgstAmount,
                     'sgst_amount' => $sgstAmount,
                     'igst_amount' => $igstAmount,
-                    'paid_online' => $finalAmount,
+                    'paid_online' => $finalAmount,  
                     'final_amount' => ($afterDiscount + $deliveryCharge)
                 ],
 
@@ -378,11 +380,10 @@ class StoreRazorpayPaymentController extends Controller
                 'mobile' => $address->mobile ?? null,
                 'alternative_mobile' => $address->alternative_mobile ?? null,
                 'city' => $address->city ?? null,
+                'state_code' => $address->state_code ?? null,
                 'state' => $address->state ?? null,
                 'address' => $address->address ?? null,
                 'pincode' => $address->pincode ?? null,
-
-                'state_code' => $address->state_code ?? null,
                 'taxable_amount' => $taxableAmount,
                 'gst_rate' => $gstRate,
                 'cgst_amount' => $cgstAmount,

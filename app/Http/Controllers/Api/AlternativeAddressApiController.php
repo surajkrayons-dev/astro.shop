@@ -30,9 +30,9 @@ class AlternativeAddressApiController extends Controller
             'country_code'       => 'required|string|max:5',
             'mobile'             => 'required|string|max:20',
             'alternative_mobile' => 'nullable|string|max:20',
-            'state_code'         => 'nullable|string|max:10',
             'city'               => 'required|string|max:255',
             'state'              => 'required|string|max:255',
+            'state_code'         => 'nullable|string|max:10',
             'country'            => 'required|string|max:255',
             'address'            => 'required|string',
             'pincode'            => 'required|string|max:10',
@@ -52,8 +52,8 @@ class AlternativeAddressApiController extends Controller
             'country_code'       => $request->country_code ?? '+91',
             'mobile'             => $request->mobile,
             'alternative_mobile' => $request->alternative_mobile,
-            'state_code'         => $request->state_code ?? '07',
             'city'               => $request->city,
+            'state_code'         => $request->state_code,
             'state'              => $request->state,
             'country'            => $request->country,
             'address'            => $request->address,
@@ -92,8 +92,8 @@ class AlternativeAddressApiController extends Controller
             'country_code'       => 'required|string|max:5',
             'mobile'             => 'required|string|max:20',
             'alternative_mobile' => 'nullable|string|max:20',
-            'state_code'         => 'nullable|string|max:10',
             'city'               => 'required|string|max:255',
+            'state_code'         => 'nullable|string|max:10',
             'state'              => 'required|string|max:255',
             'country'            => 'required|string|max:255',
             'address'            => 'required|string',
@@ -114,8 +114,8 @@ class AlternativeAddressApiController extends Controller
             'country_code'       => $request->country_code ?? '+91',
             'mobile'             => $request->mobile,
             'alternative_mobile' => $request->alternative_mobile,
-            'state_code'         => $request->state_code,
             'city'               => $request->city,
+            'state_code'         => $request->state_code,
             'state'              => $request->state,
             'country'            => $request->country,
             'address'            => $request->address,
@@ -157,7 +157,8 @@ class AlternativeAddressApiController extends Controller
                 'district as city',
                 'state',
                 'state_code',
-                'pincode'
+                'pincode',
+                DB::raw("'India' as country")
             )
             ->distinct()
             ->get();
