@@ -205,6 +205,7 @@ class OrderApiController extends Controller
             // 🧾 BASIC
             'order_id' => $order->id,
             'order_number' => $order->order_number,
+            'invoice_number' => $order->invoice_number,
             'status' => $order->status,
 
             // 👤 USER
@@ -214,6 +215,14 @@ class OrderApiController extends Controller
             'pricing' => [
                 'subtotal' => $order->subtotal,
                 'discount' => $order->discount,
+                // GST
+                'taxable_amount' => $order->taxable_amount,
+                'gst_rate' => $order->gst_rate,
+                'tax_type' => $order->tax_type,
+                'cgst_amount' => $order->cgst_amount,
+                'sgst_amount' => $order->sgst_amount,
+                'igst_amount' => $order->igst_amount,
+                // OTHER
                 'delivery_charge' => $order->delivery_charge,
                 'wallet_used' => $order->wallet_used,
                 'paid_amount' => $order->paid_amount,
@@ -232,10 +241,10 @@ class OrderApiController extends Controller
                 'paid_at' => $order->paid_at,
             ] : [
                 'payment_id' => null,
-                'transaction_id' => null,
+                'transaction_id' => 'WALLET-TXN-' . $order->id,
                 'gateway' => 'wallet',
                 'mode' => 'wallet_only',
-                'amount' => 0,
+                'amount' => $order->wallet_used,
                 'currency' => 'INR',
                 'status' => 'success',
                 'paid_at' => $order->paid_at,
@@ -260,6 +269,7 @@ class OrderApiController extends Controller
                     'email' => $order->email,
                     'mobile' => $order->mobile,
                     'alternative_mobile' => $order->alternative_mobile,
+                    'state_code' => $order->state_code,
                     'state' => $order->state,
                     'city' => $order->city,
                     'country' => $order->country,
@@ -272,6 +282,7 @@ class OrderApiController extends Controller
                     'email' => $order->addressData->email,
                     'mobile' => $order->addressData->mobile,
                     'alternative_mobile' => $order->addressData->alternative_mobile,
+                    'state_code' => $order->addressData->state_code,
                     'state' => $order->addressData->state,
                     'city' => $order->addressData->city,
                     'country' => $order->addressData->country,

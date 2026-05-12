@@ -33,12 +33,19 @@ class Order extends Model
         'awb_code',
         'courier_name',
         'shipping_status',
+        'invoice_number',
         'coupon_id',
         'payment_id',
         'order_number',
         'subtotal',
         'discount',
         'delivery_charge',
+        'taxable_amount',
+        'gst_rate',
+        'cgst_amount',
+        'sgst_amount',
+        'igst_amount',
+        'tax_type',
         'wallet_used',
         'paid_amount',
         'total_amount',
@@ -54,7 +61,25 @@ class Order extends Model
     ];
 
     protected $casts = [
+
+        // JSON
         'price_breakdown' => 'array',
+
+        // MONEY
+        'subtotal' => 'float',
+        'discount' => 'float',
+        'delivery_charge' => 'float',
+        'wallet_used' => 'float',
+        'paid_amount' => 'float',
+        'total_amount' => 'float',
+
+        // BOX
+        'total_weight' => 'float',
+        'box_length' => 'float',
+        'box_breadth' => 'float',
+        'box_height' => 'float',
+
+        // DATES
         'paid_at' => 'datetime',
         'cancelled_at' => 'datetime',
         'delivered_at' => 'datetime',

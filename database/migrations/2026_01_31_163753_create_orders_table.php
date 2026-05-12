@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('alternative_mobile')->nullable();
             $table->string('city')->nullable();
             $table->string('state')->nullable();
+            $table->string('state_code', 10)->nullable();
             $table->string('country')->default('India');
             $table->text('address')->nullable();
             $table->string('pincode')->nullable();
@@ -32,11 +33,20 @@ return new class extends Migration
             $table->string('courier_name')->nullable();
             $table->string('shipping_status')->default('pending');
 
+            $table->string('invoice_number')->nullable()->unique();
             $table->string('order_number')->unique();
 
             $table->decimal('subtotal', 10, 2);
             $table->decimal('discount', 10, 2)->default(0);
             $table->decimal('delivery_charge', 10, 2)->default(0);
+
+            // TAXES
+            $table->decimal('taxable_amount', 10, 2)->default(0);
+            $table->decimal('gst_rate', 5, 2)->default(0);
+            $table->decimal('cgst_amount', 10, 2)->default(0);
+            $table->decimal('sgst_amount', 10, 2)->default(0);
+            $table->decimal('igst_amount', 10, 2)->default(0);
+            $table->string('tax_type')->nullable();
 
             $table->decimal('wallet_used', 10, 2)->default(0);
             $table->decimal('paid_amount', 10, 2)->default(0);

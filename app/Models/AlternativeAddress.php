@@ -20,6 +20,7 @@ class AlternativeAddress extends Model
         'alternative_mobile',
         'city',
         'state',
+        'state_code',
         'country',
         'address',
         'pincode'

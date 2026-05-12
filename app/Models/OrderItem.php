@@ -29,8 +29,15 @@ class OrderItem extends Model
 
     protected $casts = [
         'ratti' => 'float',
+        'quantity' => 'integer',
+
         'price' => 'float',
-        'total' => 'float'
+        'total' => 'float',
+
+        'weight' => 'float',
+        'length' => 'float',
+        'breadth' => 'float',
+        'height' => 'float',
     ];
 
     public function order()

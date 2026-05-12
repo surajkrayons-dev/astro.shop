@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('mobile');
             $table->string('alternative_mobile')->nullable();
             $table->string('city');
+            $table->string('state_code', 10)->nullable();
             $table->string('state');
             $table->string('country')->default('India');
             $table->text('address');

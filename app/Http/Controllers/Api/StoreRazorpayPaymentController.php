@@ -308,9 +308,38 @@ class StoreRazorpayPaymentController extends Controller
             $address = null;
 
             if ($request->address_id) {
+
                 $address = DB::table('alternative_addresses')
                     ->where('id', $request->address_id)
                     ->first();
+            }
+
+            $sellerStateCode = '07'; // Delhi
+
+            $gstRate = 18;
+
+            $taxableAmount = round(($afterDiscount * 100) / (100 + $gstRate), 2);
+
+            $totalTax = round($afterDiscount - $taxableAmount, 2);
+
+            $cgstAmount = 0;
+            $sgstAmount = 0;
+            $igstAmount = 0;
+
+            $taxType = null;
+
+            if ($address && $address->state_code == $sellerStateCode) {
+
+                $taxType = 'cgst_sgst';
+
+                $cgstAmount = round($totalTax / 2, 2);
+                $sgstAmount = round($totalTax / 2, 2);
+
+            } else {
+
+                $taxType = 'igst';
+
+                $igstAmount = $totalTax;
             }
 
             $order = Order::create([
@@ -332,6 +361,12 @@ class StoreRazorpayPaymentController extends Controller
                     'coupon_discount' => $discount,
                     'delivery_charge' => $deliveryCharge,
                     'wallet_used' => $walletUsed,
+                    'taxable_amount' => $taxableAmount,
+                    'gst_rate' => $gstRate,
+                    'tax_type' => $taxType,
+                    'cgst_amount' => $cgstAmount,
+                    'sgst_amount' => $sgstAmount,
+                    'igst_amount' => $igstAmount,
                     'paid_online' => $finalAmount,
                     'final_amount' => ($afterDiscount + $deliveryCharge)
                 ],
@@ -347,9 +382,25 @@ class StoreRazorpayPaymentController extends Controller
                 'address' => $address->address ?? null,
                 'pincode' => $address->pincode ?? null,
 
+                'state_code' => $address->state_code ?? null,
+                'taxable_amount' => $taxableAmount,
+                'gst_rate' => $gstRate,
+                'cgst_amount' => $cgstAmount,
+                'sgst_amount' => $sgstAmount,
+                'igst_amount' => $igstAmount,
+                'tax_type' => $taxType,
+
                 'status' => 'paid',
                 'paid_at' => now()
             ]);
+
+            $invoiceNumber = 'AT-' . str_pad($order->id, 4, '0', STR_PAD_LEFT);
+
+            $order->update([
+                'invoice_number' => $invoiceNumber
+            ]);
+
+            $walletTransaction = null;
 
             // WALLET DEDUCT AFTER ORDER CREATE
             if ($walletUsed > 0) {
@@ -368,7 +419,8 @@ class StoreRazorpayPaymentController extends Controller
                     'total_spent' => $wallet->total_spent + $walletUsed
                 ]);
 
-                StoreWalletTransaction::create([
+                // StoreWalletTransaction::create([
+                $walletTransaction = StoreWalletTransaction::create([
                     'user_id' => $user->id,
                     'order_id' => $order->id, // âœ… FIXED
                     'type' => 'debit',
@@ -462,15 +514,23 @@ class StoreRazorpayPaymentController extends Controller
             
                 'order' => [
                     'order_id' => $order->id,
+                    'invoice_number' => $order->invoice_number,
                     'order_number' => $order->order_number,
                     'status' => $order->status,
             
                     'pricing' => [
                         'subtotal' => $subtotal,
                         'discount' => $discount,
+                        'taxable_amount' => $taxableAmount,
+                        'gst_rate' => $gstRate,
+                        'tax_type' => $taxType,
+                        'cgst_amount' => $cgstAmount,
+                        'sgst_amount' => $sgstAmount,
+                        'igst_amount' => $igstAmount,
                         'wallet_used' => $walletUsed,
                         'delivery_charge' => $deliveryCharge,
                         'paid_online' => $finalAmount,
+                        'final_amount' => ($afterDiscount + $deliveryCharge)
                     ],
             
                     'payment' => $payment ? [
@@ -481,10 +541,12 @@ class StoreRazorpayPaymentController extends Controller
                         'currency' => $payment->currency,
                         'status' => $payment->payment_status,
                     ] : [
-                        'transaction_id' => null,
+                        'transaction_id' => $walletTransaction
+                            ? 'WALLET-TXN-' . $walletTransaction->id
+                            : null,
                         'payment_gateway' => 'wallet',
                         'payment_mode' => 'wallet_only',
-                        'amount' => 0,
+                        'amount' => $walletUsed,
                         'currency' => 'INR',
                         'status' => 'success',
                     ],
