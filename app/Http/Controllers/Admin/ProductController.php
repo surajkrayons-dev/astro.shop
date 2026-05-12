@@ -106,6 +106,9 @@ class ProductController extends AdminController
             'before_price' => 'nullable|numeric',
             'after_price'  => 'nullable|numeric',
 
+            'hsn_code' => 'nullable|string|max:50',
+            'gst_rate' => 'nullable|numeric|min:0|max:100',
+
             'weight'   => 'nullable|numeric|min:0',
             'length'   => 'nullable|numeric|min:0',
             'breadth'  => 'nullable|numeric|min:0',
@@ -182,6 +185,9 @@ class ProductController extends AdminController
 
                 'before_price' => $request->before_price,
                 'after_price' => $request->after_price,
+
+                'hsn_code' => $request->hsn_code ?? '7116',
+                'gst_rate' => $request->gst_rate ?? 3,
 
                 'weight'  => $request->weight ?? 0,
                 'length'  => $request->length ?? 0,
@@ -270,6 +276,9 @@ class ProductController extends AdminController
             'ratti_options.*.ratti_afterPrice' => 'required|numeric',
             'ratti_options.*.ratti_beforePrice' => 'nullable|numeric',
 
+            'hsn_code' => 'nullable|string|max:50',
+            'gst_rate' => 'nullable|numeric|min:0|max:100',
+
             'weight'   => 'nullable|numeric|min:0',
             'length'   => 'nullable|numeric|min:0',
             'breadth'  => 'nullable|numeric|min:0',
@@ -355,6 +364,9 @@ class ProductController extends AdminController
 
                 'before_price' => $request->before_price,
                 'after_price' => $request->after_price,
+
+                'hsn_code' => $request->hsn_code ?? '7116',
+                'gst_rate' => $request->gst_rate ?? 3,
 
                 'weight'  => $request->weight ?? 0,
                 'length'  => $request->length ?? 0,

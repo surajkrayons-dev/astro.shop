@@ -316,54 +316,11 @@ class StoreRazorpayPaymentController extends Controller
 
             $sellerState = 'Delhi';
 
-            $totalTax = 0;
+            $gstRate = 3;
 
-            $taxableAmount = 0;
+            $taxableAmount = round(($afterDiscount * 100) / (100 + $gstRate), 2);
 
-            $gstRate = 0;
-
-            $hsnCodes = [];
-
-            foreach ($items as $item) {
-
-                $product = Product::find($item->product_id);
-
-                if (!$product) {
-                    continue;
-                }
-
-                $itemTotal = $item->total_price;
-
-                // PRODUCT GST
-                $itemGstRate = $product->gst_rate ?? 0;
-
-                // PRODUCT HSN
-                if ($product->hsn_code) {
-                    $hsnCodes[] = $product->hsn_code;
-                }
-
-                // TAX CALCULATION
-                $itemTaxableAmount = round(
-                    ($itemTotal * 100) / (100 + $itemGstRate),
-                    2
-                );
-
-                $itemTax = round(
-                    $itemTotal - $itemTaxableAmount,
-                    2
-                );
-
-                $taxableAmount += $itemTaxableAmount;
-
-                $totalTax += $itemTax;
-
-                // SAVE GST RATE
-                $gstRate = $itemGstRate;
-            }
-
-            $hsnCodes = array_unique($hsnCodes);
-
-            $hsnCode = implode(',', $hsnCodes);
+            $totalTax = round($afterDiscount - $taxableAmount, 2);
 
             $cgstAmount = 0;
             $sgstAmount = 0;
@@ -441,8 +398,9 @@ class StoreRazorpayPaymentController extends Controller
 
             $invoiceNumber = 'AT-' . str_pad($order->id, 4, '0', STR_PAD_LEFT);
 
-            $order->invoice_number = $invoiceNumber;
-            $order->save();
+            $order->update([
+                'invoice_number' => $invoiceNumber
+            ]);
 
             $walletTransaction = null;
 
@@ -598,8 +556,6 @@ class StoreRazorpayPaymentController extends Controller
                     'items' => $order->items->map(function ($item) {
                         return [
                             'product_id' => $item->product_id,
-                            'gst_rate' => $item->product->gst_rate ?? 0,
-                            'hsn_code' => $item->product->hsn_code ?? null,
                             'name' => $item->product_name,
                             'image' => $item->product_image,
                             'quantity' => $item->quantity,

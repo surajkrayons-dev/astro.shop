@@ -35,6 +35,9 @@ class Product extends Model
         'before_price',
         'after_price',
 
+        'hsn_code',
+        'gst_rate',
+
         'shipping_info',
         'origin',
         'lab_certificates',

@@ -150,6 +150,28 @@
 
                                         </div>
 
+                                        <div class="col-md-6 mb-3">
+
+                                                <label class="fw-bold">
+                                                    HSN Code
+                                                </label>
+
+                                                <input type="text" name="hsn_code" class="form-control"
+                                                    placeholder="Example: 7116" value="{{ $product->hsn_code }}">
+
+                                            </div>
+
+                                            <div class="col-md-6 mb-3">`
+
+                                                <label class="fw-bold">
+                                                    GST Rate (%)
+                                                </label>
+
+                                                <input type="number" step="0.01" name="gst_rate"
+                                                    class="form-control" placeholder="Example: 3" value="{{ $product->gst_rate }}">
+
+                                            </div>
+
                                         <div class="col-md-12 mt-3 mb-3">
                                             <h5 class="fw-bold">Shipping Details</h5>
                                         </div>

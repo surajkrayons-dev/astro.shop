@@ -206,6 +206,7 @@ class OrderApiController extends Controller
             'order_id' => $order->id,
             'order_number' => $order->order_number,
             'invoice_number' => $order->invoice_number,
+            'hsn_code' => $order->hsn_code,
             'status' => $order->status,
 
             // 👤 USER
@@ -323,6 +324,8 @@ class OrderApiController extends Controller
                     'quantity' => $item->quantity,
                     'price' => $item->price,
                     'total' => $item->total,
+                    'gst_rate' => $product->gst_rate ?? 0,
+                    'hsn_code' => $product->hsn_code ?? null,
 
                     // 📦 ITEM DIMENSIONS
                     'weight' => $item->weight,

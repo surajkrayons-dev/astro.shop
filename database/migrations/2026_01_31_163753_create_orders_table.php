@@ -35,6 +35,7 @@ return new class extends Migration
 
             $table->string('invoice_number')->nullable()->unique();
             $table->string('order_number')->unique();
+            $table->string('hsn_code')->nullable();
 
             $table->decimal('subtotal', 10, 2);
             $table->decimal('discount', 10, 2)->default(0);
