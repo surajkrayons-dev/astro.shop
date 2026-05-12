@@ -30,27 +30,41 @@ class ProductController extends AdminController
                 'categories.name as category_name',
                 'categories.code as category_code',
             ])
-            ->when($request->filled('category_id'),
-                fn($q) => $q->where('products.category_id', $request->category_id)
-            )
-            ->when($request->filled('product_id'),
-                fn($q) => $q->where('products.id', $request->product_id)
-            )
-            ->when($request->filled('stock_status'),
-                fn($q) => $q->where('products.stock_status', $request->stock_status)
-            )
-            ->when($request->status !== null && $request->status !== "",
-                fn($q) => $q->where('products.status', $request->status)
-            )
+            ->when($request->filled('category_id'), function ($q) use ($request) {
+    
+                $q->where('products.category_id', $request->category_id);
+    
+            })
+            ->when($request->filled('product_id'), function ($q) use ($request) {
+    
+                $q->where('products.id', $request->product_id);
+    
+            })
+            ->when($request->filled('stock_status'), function ($q) use ($request) {
+    
+                $q->where('products.stock_status', $request->stock_status);
+    
+            })
+            ->when($request->status !== null && $request->status !== "", function ($q) use ($request) {
+    
+                $q->where('products.status', $request->status);
+    
+            })
             ->orderBy('products.id', 'desc');
-
+    
         return \DataTables::of($list)
-            ->addColumn('category_name', fn($row) =>
-                '[ <b>'.e($row->category_code).'</b> ]<br>'.e($row->category_name)
-            )
-            ->addColumn('code_name', fn($row) =>
-                '[ <b>'.e($row->product_code).'</b> ]<br>'.e($row->product_name)
-            )
+            ->addColumn('category_name', function ($row) {
+    
+                return '[ <b>' . e($row->category_code) . '</b> ]<br>' .
+                    e($row->category_name);
+    
+            })
+            ->addColumn('code_name', function ($row) {
+    
+                return '[ <b>' . e($row->product_code) . '</b> ]<br>' .
+                    e($row->product_name);
+    
+            })
             ->rawColumns(['category_name', 'code_name'])
             ->make();
     }
@@ -186,7 +200,7 @@ class ProductController extends AdminController
                 'before_price' => $request->before_price,
                 'after_price' => $request->after_price,
 
-                'hsn_code' => $request->hsn_code ?? '7116',
+                'hsn_code' => $request->hsn_code ?? '71162000',
                 'gst_rate' => $request->gst_rate ?? 3,
 
                 'weight'  => $request->weight ?? 0,
@@ -365,7 +379,7 @@ class ProductController extends AdminController
                 'before_price' => $request->before_price,
                 'after_price' => $request->after_price,
 
-                'hsn_code' => $request->hsn_code ?? '7116',
+                'hsn_code' => $request->hsn_code ?? '71162000',
                 'gst_rate' => $request->gst_rate ?? 3,
 
                 'weight'  => $request->weight ?? 0,

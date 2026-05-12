@@ -157,7 +157,7 @@
                                                 </label>
 
                                                 <input type="text" name="hsn_code" class="form-control"
-                                                    placeholder="Example: 7116" value="{{ $product->hsn_code }}">
+                                                    placeholder="Example: 71162000" value="{{ $product->hsn_code }}">
 
                                             </div>
 

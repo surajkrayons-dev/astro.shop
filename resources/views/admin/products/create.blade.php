@@ -156,7 +156,7 @@
                                                 </label>
 
                                                 <input type="text" name="hsn_code" class="form-control"
-                                                    placeholder="Example: 7116" value="7116">
+                                                    placeholder="Example: 71162000" value="71162000">
 
                                             </div>
 
