@@ -20,6 +20,7 @@ return new class extends Migration
             $table->decimal('max_discount', 10, 2)->nullable(); // max discount cap
             $table->date('expiry_date');
             $table->boolean('status')->default(1);
+            $table->boolean('is_visible')->default(1);
 
             $table->timestamps();
         });

@@ -321,7 +321,9 @@
 
                             <label class="fw-bold d-flex justify-content-between">
 
-                                Ratti Options
+                                <label class="fw-bold">Ratti</label>
+                                <label class="fw-bold">Before Price</label>
+                                <label class="fw-bold">After Price</label>
 
                                 <button type="button" class="btn btn-sm btn-primary" id="add-ratti">
                                     <i class="fa fa-plus"></i>

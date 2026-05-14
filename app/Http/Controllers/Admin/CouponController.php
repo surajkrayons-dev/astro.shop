@@ -26,6 +26,9 @@ class CouponController extends AdminController
             ->when($request->status !== null && $request->status !== "",
                 fn($q) => $q->where('status', $request->status)
             )
+            ->when($request->is_visible !== null && $request->is_visible !== "",
+                fn($q) => $q->where('is_visible', $request->is_visible)
+            )
             ->orderByDesc('id');
 
         return \DataTables::of($list)
@@ -50,7 +53,12 @@ class CouponController extends AdminController
                     ? '<span class="badge bg-success">Active</span>'
                     : '<span class="badge bg-danger">Inactive</span>';
             })
-            ->rawColumns(['code','discount_type','status_label'])
+            ->addColumn('visible_label', function ($row) {
+                return $row->is_visible
+                    ? '<span class="badge bg-success">Visible</span>'
+                    : '<span class="badge bg-secondary">Hidden</span>';
+            })
+            ->rawColumns(['code','discount_type','status_label','visible_label'])
             ->make(true);
     }
 
@@ -69,6 +77,7 @@ class CouponController extends AdminController
             'max_discount'    => 'nullable|numeric|min:0',
             'expiry_date'     => 'required|date|after:today',
             'status'          => 'nullable|in:0,1',
+            'is_visible'      => 'nullable|in:0,1',
         ]);
 
         if ($request->discount_type === 'percentage') {
@@ -94,6 +103,7 @@ class CouponController extends AdminController
             'max_discount'   => $request->max_discount,
             'expiry_date'    => $request->expiry_date,
             'status'         => $request->status ?? 1,
+            'is_visible'     => $request->is_visible ?? 1,
         ]);
 
         return response()->json([
@@ -119,6 +129,7 @@ class CouponController extends AdminController
             'max_discount'   => 'nullable|numeric|min:0',
             'expiry_date'    => 'required|date',
             'status'         => 'nullable|in:0,1',
+            'is_visible'     => 'nullable|in:0,1',
         ]);
 
         if ($request->discount_type === 'percentage') {
@@ -145,6 +156,7 @@ class CouponController extends AdminController
             'max_discount'   => $request->max_discount,
             'expiry_date'    => $request->expiry_date,
             'status'         => $request->status ?? 1,
+            'is_visible'     => $request->is_visible ?? 1,
         ]);
 
         return response()->json([
@@ -170,6 +182,19 @@ class CouponController extends AdminController
 
         return response()->json([
             'message' => 'Status updated successfully'
+        ]);
+    }
+
+    public function getChangeVisible(Request $request)
+    {
+        $coupon = Coupon::findOrFail($request->id);
+
+        $coupon->update([
+            'is_visible' => !$coupon->is_visible
+        ]);
+
+        return response()->json([
+            'message' => 'Visibility updated successfully'
         ]);
     }
 }

@@ -5,19 +5,20 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 
 class CouponApiController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Coupon::query()
+        $baseQuery = Coupon::query()
             ->where('status', 1)
             ->whereDate('expiry_date', '>=', now());
 
-        // 🔹 1. Single Coupon by ID
         if ($request->filled('id')) {
-            $coupon = $query->where('id', $request->id)->first();
+
+            $coupon = $baseQuery
+                ->where('id', $request->id)
+                ->first();
 
             if (!$coupon) {
                 return response()->json([
@@ -32,9 +33,11 @@ class CouponApiController extends Controller
             ]);
         }
 
-        // 🔹 2. Single Coupon by CODE
         if ($request->filled('code')) {
-            $coupon = $query->where('code', $request->code)->first();
+
+            $coupon = $baseQuery
+                ->where('code', $request->code)
+                ->first();
 
             if (!$coupon) {
                 return response()->json([
@@ -49,8 +52,10 @@ class CouponApiController extends Controller
             ]);
         }
 
-        // 🔹 3. Get All Coupons
-        $coupons = $query->latest()->get();
+        $coupons = $baseQuery
+            ->where('is_visible', 1)
+            ->latest()
+            ->get();
 
         return response()->json([
             'status' => true,
@@ -75,7 +80,7 @@ class CouponApiController extends Controller
         ];
     }
 
-        private function formatCouponText($c)
+    private function formatCouponText($c)
     {
         if ($c->discount_type === 'percentage') {
             return $c->discount_value . '% OFF up to ₹' . $c->max_discount;

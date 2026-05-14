@@ -95,7 +95,7 @@
                 </div>
 
                 {{-- Status --}}
-                <div class="col-lg-3 mt-3">
+                <div class="col-lg-2 p-0 mt-3 ms-2">
                     <div class="form-group d-flex justify-content-between align-items-center">
                         <label class="form-label fw-bold">Status</label>
 
@@ -106,6 +106,22 @@
                                 value="1" {{ $coupon->status ? 'checked' : '' }}>
 
                             <label for="update-switch-status" data-on-label="Yes" data-off-label="No"></label>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Visible On Frontend --}}
+                <div class="col-lg-4 mt-3">
+                    <div class="form-group d-flex justify-content-between align-items-center">
+                        <label class="form-label fw-bold">Visible On Frontend</label>
+
+                        <input type="hidden" name="is_visible" value="0">
+
+                        <div class="square-switch">
+                            <input type="checkbox" id="update-switch-visible" name="is_visible" switch="status"
+                                value="1" {{ $coupon->is_visible ? 'checked' : '' }}>
+
+                            <label for="update-switch-visible" data-on-label="Yes" data-off-label="No"></label>
                         </div>
                     </div>
                 </div>

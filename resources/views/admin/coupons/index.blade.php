@@ -63,6 +63,15 @@
                             </select>
                         </div>
 
+                        <div class="col">
+                            <label class="form-label fw-bold">Visible</label>
+                            <select class="form-control select2-class2" id="is_visible" data-placeholder="Choose Visibility">
+                                <option value=""></option>
+                                <option value="1">Visible</option>
+                                <option value="0">Hidden</option>
+                            </select>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -81,6 +90,7 @@
                                 <th>Value</th>
                                 <th>Expiry</th>
                                 <th>Status</th>
+                                <th>Visible</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -106,6 +116,7 @@
                         d.id = $('#id').val();
                         d.discount_type = $('#discount_type').val();
                         d.status = $('#status').val();
+                        d.is_visible = $('#is_visible').val();
                     }
                 },
                 columns: [{
@@ -142,6 +153,27 @@
                                            data-off-label="No"></label>
                                 </div>
                         `;
+                        }
+                    },
+                    {
+                        data: null,
+                        name: 'is_visible',
+                        className: 'text-center',
+                        mRender: (data, type, row) => {
+                            return `
+                                <div class="square-switch">
+                                    <input type="checkbox"
+                                        id="visible-switch-${row.id}"
+                                        class="change-visible"
+                                        switch="info"
+                                        data-id="${row.id}"
+                                        ${row.is_visible == 1 ? 'checked' : ''} />
+
+                                    <label for="visible-switch-${row.id}"
+                                        data-on-label="Yes"
+                                        data-off-label="No"></label>
+                                </div>
+                            `;
                         }
                     },
                     {
@@ -186,7 +218,26 @@
                     });
             });
 
-            $('#id, #discount_type, #status').on('change', function() {
+            $(document).on('change', '.change-visible', function() {
+
+                let checkbox = $(this);
+                let id = checkbox.data('id');
+
+                checkbox.prop('disabled', true);
+
+                $.get(`{{ route('admin.coupons.change.visible') }}/${id}`)
+                    .done(function() {
+                        table.ajax.reload(null, false);
+                    })
+                    .fail(function() {
+                        checkbox.prop('checked', !checkbox.prop('checked'));
+                    })
+                    .always(function() {
+                        checkbox.prop('disabled', false);
+                    });
+            });
+
+            $('#id, #discount_type, #status, #is_visible').on('change', function() {
                 table.ajax.reload();
             });
 
@@ -194,6 +245,7 @@
                 $('#id').val('').trigger('change');
                 $('#discount_type').val('').trigger('change');
                 $('#status').val('').trigger('change');
+                $('#is_visible').val('').trigger('change');
                 table.ajax.reload();
             });
 

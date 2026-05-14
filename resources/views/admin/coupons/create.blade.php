@@ -61,7 +61,7 @@
                     </div>
                 </div>
 
-                <div class="col-lg-3 mt-3">
+                <div class="col-lg-2 p-0 mt-3 ms-2">
                     <div class="form-group d-flex justify-content-between align-items-center">
                         <label class="form-label fw-bold">Status</label>
                         <input type="hidden" name="status" value="0">
@@ -70,6 +70,21 @@
                             <input type="checkbox" id="switch-status" name="status" switch="status" value="1"
                                 checked>
                             <label for="switch-status" data-on-label="Yes" data-off-label="No"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 mt-3">
+                    <div class="form-group d-flex justify-content-between align-items-center">
+                        <label class="form-label fw-bold">Visible On Frontend</label>
+
+                        <input type="hidden" name="is_visible" value="0">
+
+                        <div class="square-switch">
+                            <input type="checkbox" id="switch-visible" name="is_visible" switch="info" value="1"
+                                checked>
+
+                            <label for="switch-visible" data-on-label="Yes" data-off-label="No"></label>
                         </div>
                     </div>
                 </div>

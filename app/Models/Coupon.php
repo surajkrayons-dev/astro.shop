@@ -18,6 +18,7 @@ class Coupon extends Model
         'min_amount',
         'max_discount',
         'expiry_date',
-        'status'
+        'status',
+        'is_visible',
     ];
 }

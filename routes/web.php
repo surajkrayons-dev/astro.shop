@@ -386,6 +386,7 @@ Route::namespace('App\Http\Controllers\Admin')
                         Route::post('update/{id?}', 'CouponController@postUpdate')->name('update');
                         Route::get('delete/{id?}', 'CouponController@getDelete')->name('delete');
                         Route::get('change/status/{id?}', 'CouponController@getChangeStatus')->name('change.status');
+                        Route::get('change/visible/{id?}', 'CouponController@getChangeVisible')->name('change.visible');
                     });
 
                 Route::prefix('product_categories')
