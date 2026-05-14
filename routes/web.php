@@ -416,6 +416,7 @@ Route::namespace('App\Http\Controllers\Admin')
                         Route::get('delete/{id?}', 'ProductController@getDelete')->name('delete');
                         Route::get('change/status/{id?}', 'ProductController@getChangeStatus')->name('change.status');
                         Route::get('/get-product-code', 'ProductController@getProductCode')->name('getProductCode');
+                        Route::get('/filter-data', 'ProductController@getFilterData')->name('filter.data');
                     });
 
                 Route::prefix('orders')

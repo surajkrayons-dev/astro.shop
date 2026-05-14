@@ -216,4 +216,87 @@
             });
         });
     </script>
+    <script>
+        function loadFilterData() {
+
+            $.ajax({
+
+                url: "{{ route('admin.products.filter.data') }}",
+
+                type: "GET",
+
+                data: {
+                    category_id: $('#category_id').val(),
+                    product_id: $('#product_id').val(),
+                    stock_status: $('#stock_status').val(),
+                    status: $('#status').val(),
+                },
+
+                success: function(res) {
+
+                    let selectedProduct = $('#product_id').val();
+                    let selectedStock = $('#stock_status').val();
+                    let selectedStatus = $('#status').val();
+
+                    // PRODUCTS
+                    $('#product_id').html('<option value=""></option>');
+
+                    $.each(res.products, function(key, product) {
+
+                        $('#product_id').append(`
+                        <option value="${product.id}">
+                            ${product.name}
+                        </option>
+                    `);
+
+                    });
+
+                    $('#product_id').val(selectedProduct);
+
+                    // STOCK STATUS
+                    $('#stock_status').html('<option value=""></option>');
+
+                    $.each(res.stock_statuses, function(key, stock) {
+
+                        let text = stock
+                            .replaceAll('_', ' ')
+                            .replace(/\b\w/g, l => l.toUpperCase());
+
+                        $('#stock_status').append(`
+                        <option value="${stock}">
+                            ${text}
+                        </option>
+                    `);
+
+                    });
+
+                    $('#stock_status').val(selectedStock);
+
+                    // STATUS
+                    $('#status').html('<option value=""></option>');
+
+                    $.each(res.statuses, function(key, status) {
+
+                        $('#status').append(`
+                        <option value="${status}">
+                            ${status == 1 ? 'Active' : 'Inactive'}
+                        </option>
+                    `);
+
+                    });
+
+                    $('#status').val(selectedStatus);
+
+                }
+
+            });
+
+        }
+
+        $('#category_id, #product_id, #stock_status, #status').on('change', function() {
+
+            loadFilterData();
+
+        });
+    </script>
 @endsection
