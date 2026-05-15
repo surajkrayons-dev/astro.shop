@@ -225,18 +225,16 @@ class StoreRazorpayPaymentController extends Controller
                     );
                 }
 
-                $latestPrice = $product->sale_price ?? $product->price;
-
-                // AUTO UPDATE CART PRICE
-                if ($item->price_at_time != $latestPrice) {
-
-                    $item->update([
-                        'price_at_time' => $latestPrice,
-                        'total_price' => ($latestPrice * $item->quantity)
-                    ]);
+                if (
+                    $item->price_at_time === null ||
+                    $item->price_at_time <= 0
+                ) {
+                    throw new \Exception(
+                        $product->name . ' price not configured'
+                    );
                 }
 
-                $subtotal += ($latestPrice * $item->quantity);
+                $subtotal += $item->total_price;
             }
 
             // ðŸ”¥ COUPON
@@ -875,18 +873,16 @@ class StoreRazorpayPaymentController extends Controller
             }
 
             // LIVE PRICE
-            $latestPrice = $product->sale_price ?? $product->price;
-
-            // AUTO UPDATE CART PRICE
-            if ($item->price_at_time != $latestPrice) {
-
-                $item->update([
-                    'price_at_time' => $latestPrice,
-                    'total_price' => ($latestPrice * $item->quantity)
-                ]);
+            if (
+                $item->price_at_time === null ||
+                $item->price_at_time <= 0
+            ) {
+                throw new \Exception(
+                    $product->name . ' price not configured'
+                );
             }
 
-            $subtotal += ($latestPrice * $item->quantity);
+            $subtotal += $item->total_price;
         }
 
             return [
