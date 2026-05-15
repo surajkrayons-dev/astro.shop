@@ -570,7 +570,7 @@ class ProductController extends AdminController
     {
         $query = Product::query();
 
-        if ($request->category_id) {
+        if ($request->category_id) {    
             $query->where('category_id', $request->category_id);
         }
 

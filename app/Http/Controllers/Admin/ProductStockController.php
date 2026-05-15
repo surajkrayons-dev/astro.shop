@@ -89,4 +89,36 @@ class ProductStockController extends AdminController
         ]);
     }
 
+    public function getFilterData(Request $request)
+    {
+        $query = Product::query();
+
+        if ($request->category_id) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->product_id) {
+            $query->where('id', $request->product_id);
+        }
+
+        if ($request->stock_status) {
+            $query->where('stock_status', $request->stock_status);
+        }
+
+        $products = (clone $query)
+            ->select('id', 'name', 'code')
+            ->orderBy('name')
+            ->get();
+
+        $stockStatuses = (clone $query)
+            ->select('stock_status')
+            ->distinct()
+            ->pluck('stock_status');
+
+        return response()->json([
+            'products' => $products,
+            'stock_statuses' => $stockStatuses,
+        ]);
+    }
+
 }

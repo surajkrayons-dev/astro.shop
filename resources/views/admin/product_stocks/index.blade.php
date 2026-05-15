@@ -99,7 +99,8 @@
     <script>
         $(document).ready(function() {
 
-            const table = $('#stock-table').DataTable({
+            // const table = $('#stock-table').DataTable({
+            table = $('#stock-table').DataTable({
                 processing: true,
                 serverSide: true,
 
@@ -150,11 +151,88 @@
             });
 
             $('#reset-filter-btn').on('click', function() {
+
                 $('#category_id').val('').trigger('change');
                 $('#product_id').val('').trigger('change');
                 $('#stock_status').val('').trigger('change');
+
                 table.ajax.reload();
+
             });
+
+            $(window).on('focus', function() {
+
+                table.ajax.reload(null, false);
+
+            });
+
+        });
+    </script>
+    <script>
+        function loadFilterData() {
+
+            $.ajax({
+
+                url: "{{ route('admin.product_stocks.filter.data') }}",
+
+                type: "GET",
+
+                data: {
+                    category_id: $('#category_id').val(),
+                    product_id: $('#product_id').val(),
+                    stock_status: $('#stock_status').val(),
+                },
+
+                success: function(res) {
+
+                    let selectedProduct = $('#product_id').val();
+                    let selectedStock = $('#stock_status').val();
+
+                    // PRODUCTS
+                    $('#product_id').html('<option value=""></option>');
+
+                    $.each(res.products, function(key, product) {
+
+                        $('#product_id').append(`
+                    <option value="${product.id}">
+                        ${product.code} - ${product.name}
+                    </option>
+                `);
+
+                    });
+
+                    $('#product_id').val(selectedProduct);
+
+                    // STOCK STATUS
+                    $('#stock_status').html('<option value=""></option>');
+
+                    $.each(res.stock_statuses, function(key, stock) {
+
+                        let text = stock
+                            .replaceAll('_', ' ')
+                            .replace(/\b\w/g, l => l.toUpperCase());
+
+                        $('#stock_status').append(`
+                    <option value="${stock}">
+                        ${text}
+                    </option>
+                `);
+
+                    });
+
+                    $('#stock_status').val(selectedStock);
+
+                }
+
+            });
+
+        }
+
+        $('#category_id, #product_id, #stock_status').on('change', function() {
+
+            loadFilterData();
+
+            table.ajax.reload();
 
         });
     </script>

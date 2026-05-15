@@ -442,6 +442,7 @@ Route::namespace('App\Http\Controllers\Admin')
                         Route::get('list', 'ProductStockController@getList')->name('list');
                         Route::get('view/{id?}', 'ProductStockController@getView')->name('view');
                         Route::post('update/{id}', 'ProductStockController@updateStock')->name('update');
+                        Route::get('/filter-data','ProductStockController@getFilterData')->name('filter.data');
                     });
 
                 Route::prefix('astro_banners')

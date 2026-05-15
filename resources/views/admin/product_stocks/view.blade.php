@@ -247,7 +247,8 @@
 </div>
 
 <script>
-    $(document).on('click', '#updateStockBtn', function() {
+    $(document).off('click', '#updateStockBtn')
+        .on('click', '#updateStockBtn', function() {
 
         let id = $(this).data('id');
         let qty = $('#stock-input').val();
@@ -276,6 +277,7 @@
 
             $('#stock-input').val('');
             showToastr('success', 'Updated');
+            $('#stock-table').DataTable().ajax.reload(null, false);
 
         });
 
