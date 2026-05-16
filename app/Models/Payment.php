@@ -31,7 +31,7 @@ class Payment extends Model
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
+        'amount' => 'float',
         'payment_request_data' => 'array',
         'payment_response_data' => 'array',
     ];

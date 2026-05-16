@@ -60,15 +60,23 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'stock_qty' => 'integer',
         'ratti_options' => 'array',
         'specifications' => 'array',
         'faq' => 'array',
         'lab_certificates' => 'array',
         'meta_keywords' => 'array',
+        'before_price' => 'float',
+        'after_price' => 'float',
+        'gst_rate' => 'float',
+        'weight' => 'float',
+        'length' => 'float',
+        'breadth' => 'float',
+        'height' => 'float',
+        'rating_avg' => 'float',
+        'rating_count' => 'integer',
+        'stock_qty' => 'integer',
         'status' => 'boolean',
     ];
-
 
     public function category()
     {

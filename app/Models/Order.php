@@ -74,6 +74,16 @@ class Order extends Model
         'wallet_used' => 'float',
         'paid_amount' => 'float',
         'total_amount' => 'float',
+        
+        'taxable_amount' => 'float',
+        'gst_rate' => 'float',
+        'cgst_amount' => 'float',
+        'sgst_amount' => 'float',
+        'igst_amount' => 'float',
+        
+        'wallet_used' => 'float',
+        'paid_amount' => 'float',
+        'total_amount' => 'float',
 
         // BOX
         'total_weight' => 'float',
@@ -131,7 +141,7 @@ class Order extends Model
     protected static function booted()
     {
         /**
-         * ✅ ORDER CREATED → MAILS
+         * âœ… ORDER CREATED â†’ MAILS
          */
         static::created(function ($order) {
 
@@ -169,7 +179,7 @@ class Order extends Model
         });
 
         /**
-         * ✅ ORDER UPDATED → CANCEL / DELIVER MAIL
+         * âœ… ORDER UPDATED â†’ CANCEL / DELIVER MAIL
          */
         static::updated(function ($order) {
 
@@ -189,7 +199,7 @@ class Order extends Model
                         return;
                     }
 
-                    // 🔥 DELIVERED MAIL
+                    // ðŸ”¥ DELIVERED MAIL
                     if ($order->status === 'delivered') {
 
                         // duplicate mail avoid
@@ -207,7 +217,7 @@ class Order extends Model
                         ]);
                     }
 
-                    // 🔥 CANCEL MAIL
+                    // ðŸ”¥ CANCEL MAIL
                     if ($order->status === 'cancelled') {
 
                         Mail::to($order->user->email)
