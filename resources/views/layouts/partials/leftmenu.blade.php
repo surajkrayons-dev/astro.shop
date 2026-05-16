@@ -39,6 +39,15 @@ $user = auth()->user();
                         <span>Users</span>
                     </a>
                 </li>
+                
+                <li class="menu-title">DELIVERY RATES</li>
+
+                <li>
+                    <a href="{{ route('admin.delivery_rates.index') }}">
+                        <i class="bx bxs-truck"></i>
+                        <span>Delivery Rates</span>
+                    </a>
+                </li>
 
                 <li class="menu-title">Coupons & PRODUCTS</li>
 
@@ -91,118 +100,130 @@ $user = auth()->user();
                 {{-- ================= EMPLOYEE ================= --}}
                 @elseif($user)
 
-                @if($user->hasAccess('dashboard'))
-                <li>
-                    <a href="{{ route('admin.dashboard.index') }}">
-                        <i class="bx bx-home-circle"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                @endif
+                    @if($user->hasAccess('dashboard'))
+                    <li>
+                        <a href="{{ route('admin.dashboard.index') }}">
+                            <i class="bx bx-home-circle"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    @endif
 
-                @if($user->hasAccess('earned'))
-                <li>
-                    <a href="{{ route('admin.dashboard.index') }}">
-                        <i class="bx bx-rupee"></i>
-                        <span>Earned</span>
-                    </a>
-                </li>
-                @endif
+                    @if($user->hasAccess('earned'))
+                    <li>
+                        <a href="{{ route('admin.dashboard.index') }}">
+                            <i class="bx bx-rupee"></i>
+                            <span>Earned</span>
+                        </a>
+                    </li>
+                    @endif
 
-                @if($user->hasAccess('product_stocks'))
-                <li>
-                    <a href="{{ route('admin.product_stocks.index') }}">
-                        <i class="bx bx-package"></i>
-                        <span>Product Stock</span>
-                    </a>
-                </li>
-                @endif
+                    @if($user->hasAccess('product_stocks'))
+                    <li>
+                        <a href="{{ route('admin.product_stocks.index') }}">
+                            <i class="bx bx-package"></i>
+                            <span>Product Stock</span>
+                        </a>
+                    </li>
+                    @endif
 
-                {{-- USERS --}}
-                @if($user->hasAccess('astrologers') || $user->hasAccess('users') || $user->hasAccess('payouts'))
-                <!--<li class="menu-title">Astrologers & Users</li>-->
-                @endif
+                    {{-- USERS --}}
+                    @if($user->hasAccess('astrologers') || $user->hasAccess('users') || $user->hasAccess('payouts'))
+                    <!--<li class="menu-title">Astrologers & Users</li>-->
+                    @endif
 
-                @if($user->hasAccess('users'))
-                <li>
-                    <a href="{{ route('admin.users.index') }}">
-                        <i class="bx bx-group"></i>
-                        <span>Users</span>
-                    </a>
-                </li>
-                @endif
+                    @if($user->hasAccess('users'))
+                    <li>
+                        <a href="{{ route('admin.users.index') }}">
+                            <i class="bx bx-group"></i>
+                            <span>Users</span>
+                        </a>
+                    </li>
+                    @endif
 
-                {{-- PRODUCTS --}}
-                @if($user->hasAccess('coupons') || $user->hasAccess('product_categories') ||
-                $user->hasAccess('products'))
-                <li class="menu-title">Coupons & Products</li>
-                @endif
+                    
+                    @if($user->hasAccess('delivery_rates'))
+                    <li class="menu-title">DELIVERY RATES</li>
 
-                @if($user->hasAccess('coupons'))
-                <li>
-                    <a href="{{ route('admin.coupons.index') }}">
-                        <i class="bx bxs-discount"></i>
-                        <span>Coupon</span>
-                    </a>
-                </li>
-                @endif
+                    <li>
+                        <a href="{{ route('admin.delivery_rates.index') }}">
+                            <i class="bx bxs-truck"></i>
+                            <span>Delivery Rates</span>
+                        </a>
+                    </li>
+                    @endif
 
-                @if($user->hasAccess('product_categories'))
-                <li>
-                    <a href="{{ route('admin.product_categories.index') }}">
-                        <i class="bx bx-box"></i>
-                        <span>Product Category</span>
-                    </a>
-                </li>
-                @endif
+                    {{-- PRODUCTS --}}
+                    @if($user->hasAccess('coupons') || $user->hasAccess('product_categories') ||
+                    $user->hasAccess('products'))
+                    <li class="menu-title">Coupons & Products</li>
+                    @endif
 
-                @if($user->hasAccess('products'))
-                <li>
-                    <a href="{{ route('admin.products.index') }}">
-                        <i class="bx bx-collection"></i>
-                        <span>Product</span>
-                    </a>
-                </li>
-                @endif
+                    @if($user->hasAccess('coupons'))
+                    <li>
+                        <a href="{{ route('admin.coupons.index') }}">
+                            <i class="bx bxs-discount"></i>
+                            <span>Coupon</span>
+                        </a>
+                    </li>
+                    @endif
 
-                {{-- ORDERS --}}
-                @if($user->hasAccess('orders') || $user->hasAccess('returns'))
-                <li class="menu-title">ORDERS & RETURNS</li>
-                @endif
+                    @if($user->hasAccess('product_categories'))
+                    <li>
+                        <a href="{{ route('admin.product_categories.index') }}">
+                            <i class="bx bx-box"></i>
+                            <span>Product Category</span>
+                        </a>
+                    </li>
+                    @endif
 
-                @if($user->hasAccess('orders'))
-                <li>
-                    <a href="{{ route('admin.orders.index') }}">
-                        <i class="bx bx-cart"></i>
-                        <span>Orders</span>
-                    </a>
-                </li>
-                @endif
+                    @if($user->hasAccess('products'))
+                    <li>
+                        <a href="{{ route('admin.products.index') }}">
+                            <i class="bx bx-collection"></i>
+                            <span>Product</span>
+                        </a>
+                    </li>
+                    @endif
 
-                @if($user->hasAccess('returns'))
-                <li>
-                    <a href="{{ route('admin.returns.index') }}">
-                        <i class="bx bx-undo"></i>
-                        <span>Returns</span>
-                    </a>
-                </li>
-                @endif
+                    {{-- ORDERS --}}
+                    @if($user->hasAccess('orders') || $user->hasAccess('returns'))
+                    <li class="menu-title">ORDERS & RETURNS</li>
+                    @endif
 
-                {{-- BANNERS --}}
-                @if($user->hasAccess('astro_banners') || $user->hasAccess('store_banners') ||
-                $user->hasAccess('send_mail'))
-                <li class="menu-title">Banners</li>
-                @endif
+                    @if($user->hasAccess('orders'))
+                    <li>
+                        <a href="{{ route('admin.orders.index') }}">
+                            <i class="bx bx-cart"></i>
+                            <span>Orders</span>
+                        </a>
+                    </li>
+                    @endif
 
-                @if($user->hasAccess('store_banners'))
-                <li>
-                    <a href="{{ route('admin.store_banners.index') }}">
-                        <i class="bx bx-store"></i>
-                        <span>Store Banner</span>
-                    </a>
-                </li>
-                @endif
+                    @if($user->hasAccess('returns'))
+                    <li>
+                        <a href="{{ route('admin.returns.index') }}">
+                            <i class="bx bx-undo"></i>
+                            <span>Returns</span>
+                        </a>
+                    </li>
+                    @endif
 
+                    {{-- BANNERS --}}
+                    @if($user->hasAccess('astro_banners') || $user->hasAccess('store_banners') ||
+                    $user->hasAccess('send_mail'))
+                    <li class="menu-title">Banners</li>
+                    @endif
+
+                    @if($user->hasAccess('store_banners'))
+                    <li>
+                        <a href="{{ route('admin.store_banners.index') }}">
+                            <i class="bx bx-store"></i>
+                            <span>Store Banner</span>
+                        </a>
+                    </li>
+                    @endif
+                    
                 @endif
 
             </ul>

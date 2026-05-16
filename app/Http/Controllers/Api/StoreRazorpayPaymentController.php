@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Razorpay\Api\Api;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\DeliveryRate;
 use App\Models\Payment;
 use App\Models\AlternativeAddress;
 use App\Models\Product;
@@ -33,11 +34,9 @@ class StoreRazorpayPaymentController extends Controller
                 'coupon_code' => 'nullable|string',
                 'address_id' => 'nullable|exists:alternative_addresses,id',
                 'wallet_amount' => 'nullable|numeric|min:0',
-                'delivery_charge' => 'nullable|numeric|min:0'
             ]);
 
             $walletInput = $request->wallet_amount ?? 0;
-            $deliveryCharge = $request->delivery_charge ?? 0;
 
             // ðŸ”¥ CART
             $cart = Cart::where('user_id', $user->id)->firstOrFail();
@@ -51,7 +50,6 @@ class StoreRazorpayPaymentController extends Controller
 
             $subtotal = $validatedCart['subtotal'];
 
-            // ðŸ”¥ COUPON (ONLY IF SENT)
             $discount = 0;
 
             if ($request->coupon_code) {
@@ -83,6 +81,25 @@ class StoreRazorpayPaymentController extends Controller
             }
 
             $afterDiscount = max(0, $subtotal - $discount);
+
+            $deliveryCharge = 0;
+
+            if ($request->address_id) {
+
+                $address = AlternativeAddress::find($request->address_id);
+
+                if ($address && $address->state) {
+
+                    $deliveryRate = DeliveryRate::where('state', $address->state)
+                        ->where('status', 1)
+                        ->first();
+
+                    if ($deliveryRate) {
+
+                        $deliveryCharge = $deliveryRate->delivery_charge;
+                    }
+                }
+            }
 
             // ðŸ”¥ WALLET VALIDATION (USER CONTROLLED)
             $wallet = StoreWallet::where('user_id', $user->id)
@@ -180,8 +197,7 @@ class StoreRazorpayPaymentController extends Controller
             'razorpay_signature' => 'nullable',
             'address_id' => 'nullable|exists:alternative_addresses,id',
             'coupon_code' => 'nullable',
-            'wallet_amount' => 'nullable|numeric|min:0',
-            'delivery_charge' => 'nullable|numeric|min:0'
+            'wallet_amount' => 'nullable|numeric|min:0'
         ]);
 
         DB::beginTransaction();
@@ -190,7 +206,6 @@ class StoreRazorpayPaymentController extends Controller
 
             $user = $request->user();
             $walletInput = $request->wallet_amount ?? 0;
-            $deliveryCharge = $request->delivery_charge ?? 0;
 
             // ðŸ”¥ CART
             $cart = Cart::where('user_id', $user->id)->firstOrFail();
@@ -269,6 +284,25 @@ class StoreRazorpayPaymentController extends Controller
             }
 
             $afterDiscount = max(0, $subtotal - $discount);
+
+            $deliveryCharge = 0;
+
+            if ($request->address_id) {
+
+                $address = AlternativeAddress::find($request->address_id);
+
+                if ($address && $address->state) {
+
+                    $deliveryRate = DeliveryRate::where('state', $address->state)
+                        ->where('status', 1)
+                        ->first();
+
+                    if ($deliveryRate) {
+
+                        $deliveryCharge = $deliveryRate->delivery_charge;
+                    }
+                }
+            }
 
             $wallet = StoreWallet::where('user_id', $user->id)
                 ->lockForUpdate()
@@ -668,6 +702,175 @@ class StoreRazorpayPaymentController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => $this->isTest ? $e->getMessage() : 'Payment failed'
+            ], 422);
+        }
+    }
+
+    public function calculateSummary(Request $request)
+    {
+        try {
+
+            $user = $request->user();
+
+            $request->validate([
+                'coupon_code' => 'nullable|string',
+                'address_id' => 'nullable|exists:alternative_addresses,id',
+                'wallet_amount' => 'nullable|numeric|min:0',
+            ]);
+
+            $walletInput = $request->wallet_amount ?? 0;
+
+            // CART
+            $cart = Cart::where('user_id', $user->id)
+                ->firstOrFail();
+
+            $items = CartItem::where('cart_id', $cart->id)
+                ->get();
+
+            if ($items->isEmpty()) {
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Cart empty'
+                ]);
+            }
+
+            $validatedCart = $this->validateCartItems($items);
+
+            $subtotal = $validatedCart['subtotal'];
+
+            // COUPON
+            $discount = 0;
+
+            if ($request->coupon_code) {
+
+                $coupon = Coupon::where(
+                        'code',
+                        $request->coupon_code
+                    )
+                    ->where('status', 1)
+                    ->whereDate('expiry_date', '>=', now())
+                    ->first();
+
+                if ($coupon) {
+
+                    if (
+                        $coupon->min_amount &&
+                        $subtotal < $coupon->min_amount
+                    ) {
+
+                        return response()->json([
+                            'status' => false,
+                            'message' => 'Coupon min amount not met'
+                        ]);
+                    }
+
+                    if ($coupon->discount_type == 'flat') {
+
+                        $discount = $coupon->discount_value;
+
+                    } else {
+
+                        $discount =
+                            ($subtotal * $coupon->discount_value) / 100;
+
+                        if ($coupon->max_discount) {
+
+                            $discount = min(
+                                $discount,
+                                $coupon->max_discount
+                            );
+                        }
+                    }
+                }
+            }
+
+            $afterDiscount = max(
+                0,
+                $subtotal - $discount
+            );
+
+            // DELIVERY
+            $deliveryCharge = 0;
+
+            if ($request->address_id) {
+
+                $address = AlternativeAddress::find(
+                    $request->address_id
+                );
+
+                if ($address && $address->state) {
+
+                    $deliveryRate = DeliveryRate::where(
+                            'state',
+                            $address->state
+                        )
+                        ->where('status', 1)
+                        ->first();
+
+                    if ($deliveryRate) {
+
+                        $deliveryCharge =
+                            $deliveryRate->delivery_charge;
+                    }
+                }
+            }
+
+            // WALLET
+            $wallet = StoreWallet::where(
+                    'user_id',
+                    $user->id
+                )
+                ->first();
+
+            $walletBalance = $wallet->balance ?? 0;
+
+            if ($walletInput > $walletBalance) {
+
+                $walletInput = $walletBalance;
+            }
+
+            if (
+                $walletInput >
+                ($afterDiscount + $deliveryCharge)
+            ) {
+
+                $walletInput =
+                    ($afterDiscount + $deliveryCharge);
+            }
+
+            $walletUsed = $walletInput;
+
+            $finalAmount = max(
+                0,
+                ($afterDiscount + $deliveryCharge) - $walletUsed
+            );
+
+            return response()->json([
+
+                'status' => true,
+
+                'breakdown' => [
+
+                    'subtotal' => $subtotal,
+
+                    'discount' => $discount,
+
+                    'delivery_charge' => $deliveryCharge,
+
+                    'wallet_balance' => $walletBalance,
+
+                    'wallet_used' => $walletUsed,
+
+                    'final_amount' => $finalAmount
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
             ], 422);
         }
     }

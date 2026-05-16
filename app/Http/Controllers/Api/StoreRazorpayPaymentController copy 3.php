@@ -47,7 +47,9 @@ class StoreRazorpayPaymentController extends Controller
                 return response()->json(['status' => false, 'message' => 'Cart empty']);
             }
 
-            $subtotal = $items->sum('total_price');
+            $validatedCart = $this->validateCartItems($items);
+
+            $subtotal = $validatedCart['subtotal'];
 
             // ðŸ”¥ COUPON (ONLY IF SENT)
             $discount = 0;
@@ -83,7 +85,16 @@ class StoreRazorpayPaymentController extends Controller
             $afterDiscount = max(0, $subtotal - $discount);
 
             // ðŸ”¥ WALLET VALIDATION (USER CONTROLLED)
-            $wallet = StoreWallet::firstOrCreate(['user_id' => $user->id]);
+            $wallet = StoreWallet::where('user_id', $user->id)
+                ->first();
+
+            if (!$wallet) {
+
+                $wallet = StoreWallet::create([
+                    'user_id' => $user->id,
+                    'balance' => 0
+                ]);
+            }
 
             if ($walletInput > $wallet->balance) {
                 return response()->json([
@@ -157,7 +168,7 @@ class StoreRazorpayPaymentController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => $this->isTest ? $e->getMessage() : 'Unable to create order'
-            ], 500);
+            ], 422);
         }
     }
  
@@ -189,7 +200,42 @@ class StoreRazorpayPaymentController extends Controller
                 throw new \Exception('Cart empty');
             }
 
-            $subtotal = $items->sum('total_price');
+            $productIds = $items->pluck('product_id')->unique();
+
+            $products = Product::whereIn('id', $productIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            $subtotal = 0;
+
+            foreach ($items as $item) {
+
+                $product = $products[$item->product_id] ?? null;
+
+                if (!$product) {
+                    throw new \Exception('Product not found');
+                }
+
+                // FINAL STOCK CHECK
+                if ($product->stock_qty < $item->quantity) {
+
+                    throw new \Exception(
+                        $product->name . ' only ' . $product->stock_qty . ' left in stock'
+                    );
+                }
+
+                if (
+                    $item->price_at_time === null ||
+                    $item->price_at_time <= 0
+                ) {
+                    throw new \Exception(
+                        $product->name . ' price not configured'
+                    );
+                }
+
+                $subtotal += $item->total_price;
+            }
 
             // ðŸ”¥ COUPON
             $discount = 0;
@@ -224,7 +270,17 @@ class StoreRazorpayPaymentController extends Controller
 
             $afterDiscount = max(0, $subtotal - $discount);
 
-            $wallet = StoreWallet::firstOrCreate(['user_id' => $user->id]);
+            $wallet = StoreWallet::where('user_id', $user->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$wallet) {
+
+                $wallet = StoreWallet::create([
+                    'user_id' => $user->id,
+                    'balance' => 0
+                ]);
+            }
 
             if ($walletInput > $wallet->balance) {
                 throw new \Exception('Invalid wallet usage');
@@ -326,7 +382,7 @@ class StoreRazorpayPaymentController extends Controller
 
             foreach ($items as $item) {
 
-                $product = Product::find($item->product_id);
+                $product = $products[$item->product_id] ?? null;
 
                 if (!$product) {
                     continue;
@@ -385,6 +441,26 @@ class StoreRazorpayPaymentController extends Controller
                 $taxType = 'igst';
 
                 $igstAmount = $totalTax;
+            }
+
+            foreach ($items as $item) {
+
+                $product = $products[$item->product_id];
+
+                $newStock = $product->stock_qty - $item->quantity;
+
+                $status = 'in_stock';
+
+                if ($newStock == 0) {
+                    $status = 'out_of_stock';
+                } elseif ($newStock <= 5) {
+                    $status = 'few_left';
+                }
+
+                $product->update([
+                    'stock_qty' => $newStock,
+                    'stock_status' => $status
+                ]);
             }
 
             $order = Order::create([
@@ -476,13 +552,6 @@ class StoreRazorpayPaymentController extends Controller
                 ]);
             }
 
-                $productIds = $items->pluck('product_id')->unique();
-
-                $products = Product::whereIn('id', $productIds)
-                    ->lockForUpdate()
-                    ->get()
-                    ->keyBy('id');
-
                 $totalWeight = 0;
                 $maxLength = 0;
                 $maxBreadth = 0;
@@ -491,28 +560,6 @@ class StoreRazorpayPaymentController extends Controller
                 foreach ($items as $item) {
 
                     $product = $products[$item->product_id] ?? null;
-
-                    if (!$product) {
-                        throw new \Exception('Product not found');
-                    }
-
-                    if ($product->stock_qty < $item->quantity) {
-                        throw new \Exception(($product->name ?? 'Product') . ' out of stock');
-                    }
-
-                    $newStock = $product->stock_qty - $item->quantity;
-
-                    $status = 'in_stock';
-                    if ($newStock == 0) {
-                        $status = 'out_of_stock';
-                    } elseif ($newStock <= 5) {
-                        $status = 'few_left';
-                    }
-
-                    $product->update([
-                        'stock_qty' => $newStock,
-                        'stock_status' => $status
-                    ]);
 
                     $totalWeight += (($product->weight ?? 0) * $item->quantity);
 
@@ -621,7 +668,7 @@ class StoreRazorpayPaymentController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => $this->isTest ? $e->getMessage() : 'Payment failed'
-            ], 500);
+            ], 422);
         }
     }
 
@@ -655,10 +702,20 @@ class StoreRazorpayPaymentController extends Controller
             $refundAmount = $order->total_amount;
 
             // ðŸ”¥ WALLET
-            $wallet = StoreWallet::firstOrCreate(
-                ['user_id' => $user->id],
-                ['balance' => 0, 'total_added' => 0, 'total_spent' => 0, 'total_refunded' => 0]
-            );
+            $wallet = StoreWallet::where('user_id', $user->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$wallet) {
+
+                $wallet = StoreWallet::create([
+                    'user_id' => $user->id,
+                    'balance' => 0,
+                    'total_added' => 0,
+                    'total_spent' => 0,
+                    'total_refunded' => 0
+                ]);
+            }
 
             $before = $wallet->balance;
             $after = $before + $refundAmount;
@@ -783,5 +840,54 @@ class StoreRazorpayPaymentController extends Controller
                 'items' => $order->items
             ]
         ]);
+    }
+
+    private function validateCartItems($items)
+    {
+        $productIds = $items->pluck('product_id')->unique();
+
+        $products = Product::whereIn('id', $productIds)
+            ->get()
+            ->keyBy('id');
+
+        $subtotal = 0;
+
+        foreach ($items as $item) {
+
+            $product = $products[$item->product_id] ?? null;
+
+            if (!$product) {
+                throw new \Exception('Product not found');
+            }
+
+            if ($item->quantity <= 0) {
+                throw new \Exception('Invalid quantity');
+            }
+
+            // STOCK CHECK
+            if ($product->stock_qty < $item->quantity) {
+
+                throw new \Exception(
+                    $product->name . ' only ' . $product->stock_qty . ' left in stock'
+                );
+            }
+
+            // LIVE PRICE
+            if (
+                $item->price_at_time === null ||
+                $item->price_at_time <= 0
+            ) {
+                throw new \Exception(
+                    $product->name . ' price not configured'
+                );
+            }
+
+            $subtotal += $item->total_price;
+        }
+
+            return [
+            'subtotal' => $subtotal,
+            'products' => $products
+        ];
     }
 }

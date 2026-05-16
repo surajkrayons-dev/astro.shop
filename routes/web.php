@@ -471,6 +471,19 @@ Route::namespace('App\Http\Controllers\Admin')
                         Route::get('change/status/{id?}', 'StoreBannerController@getChangeStatus')->name('change.status');
                     });
 
+                    Route::prefix('delivery_rates')
+                        ->name('delivery_rates.')
+                        ->group(function () {
+                            Route::get('/', 'DeliveryRateController@getIndex')->name('index');
+                            Route::get('list', 'DeliveryRateController@getList')->name('list');
+                            Route::get('create', 'DeliveryRateController@getCreate')->name('create.index');
+                            Route::post('create', 'DeliveryRateController@postCreate')->name('create');
+                            Route::get('update/{id?}', 'DeliveryRateController@getUpdate')->name('update.index');
+                            Route::post('update/{id?}', 'DeliveryRateController@postUpdate')->name('update');
+                            Route::get('delete/{id?}', 'DeliveryRateController@getDelete')->name('delete');
+                            Route::get('change/status/{id?}', 'DeliveryRateController@getChangeStatus')->name('change.status');
+                        });
+
                 Route::prefix('send_mail')
                     ->name('send_mail.')
                     ->group(function () {

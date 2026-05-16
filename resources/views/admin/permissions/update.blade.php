@@ -33,6 +33,7 @@
                 ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'fas fa-home'],
                 ['key' => 'product_stocks', 'label' => 'Product Stock', 'icon' => 'fas fa-boxes'],
                 ['key' => 'users', 'label' => 'Users', 'icon' => 'fas fa-users'],
+                ['key' => 'delivery_rates', 'label' => 'Delivery Rates', 'icon' => 'fas fa-truck'],
                 ['key' => 'coupons', 'label' => 'Coupons', 'icon' => 'fas fa-tags'],
                 ['key' => 'product_categories', 'label' => 'Product Category', 'icon' => 'fas fa-th-large'],
                 ['key' => 'products', 'label' => 'Products', 'icon' => 'fas fa-box'],
