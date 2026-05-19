@@ -225,6 +225,9 @@ class OrderApiController extends Controller
                 'igst_amount' => $order->igst_amount,
                 // OTHER
                 'delivery_charge' => $order->delivery_charge,
+                'cod_charge' => (float) (
+                    $order->price_breakdown['cod_charge'] ?? 0
+                ),
                 'wallet_used' => $order->wallet_used,
                 'paid_amount' => $order->paid_amount,
                 'total_amount' => $order->total_amount,

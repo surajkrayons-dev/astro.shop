@@ -262,7 +262,7 @@ class StoreCodOrderController extends Controller
                 'transaction_id' => 'COD-' . strtoupper(uniqid()),
                 'amount' => $finalAmount,
                 'currency' => 'INR',
-                'payment_status' => 'paid',
+                'payment_status' => 'success',
                 'payment_mode' => 'cod',
                 'customer_email' => $user->email,
                 'customer_phone' =>
@@ -437,5 +437,15 @@ class StoreCodOrderController extends Controller
                 'message' => $e->getMessage()
             ], 422);
         }
+    }
+
+    public function getCodCharge()
+    {
+        return response()->json([
+
+            'status' => true,
+
+            'cod_charge' => (float) env('COD_CHARGE', 49)
+        ]);
     }
 }

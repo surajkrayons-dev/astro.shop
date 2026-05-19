@@ -143,6 +143,7 @@ Route::middleware(['auth:sanctum', 'session.timeout'])->group(function () {
         Route::post('/place-cod-order', [StoreCodOrderController::class, 'placeOrder']);
         Route::post('/create-order', [StoreRazorpayPaymentController::class, 'createOrder']);
         Route::post('/verify-payment', [StoreRazorpayPaymentController::class, 'verify']);
+        Route::get('/cod-charge',[StoreCodOrderController::class, 'getCodCharge']);
         Route::post('/calculate-summary',[StoreRazorpayPaymentController::class, 'calculateSummary']);
         Route::post('/order/cancel/{id}', [StoreRazorpayPaymentController::class, 'cancelOrder']);
         Route::get('/order/{id}', [StoreRazorpayPaymentController::class, 'orderDetails']);
