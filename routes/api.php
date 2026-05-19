@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\BlogCategoryApiController;
 use App\Http\Controllers\Api\BlogApiController;
 use App\Http\Controllers\Api\PayoutApiController;
 use App\Http\Controllers\Api\RazorpayPaymentController;
+use App\Http\Controllers\Api\StoreCodOrderController;
 use App\Http\Controllers\Api\StoreRazorpayPaymentController;
 use App\Http\Controllers\Api\WalletApiController;
 use App\Http\Controllers\Api\StoreWalletApiController;
@@ -139,6 +140,7 @@ Route::middleware(['auth:sanctum', 'session.timeout'])->group(function () {
 
     // store
     Route::prefix('store')->group(function () {
+        Route::post('/place-cod-order', [StoreCodOrderController::class, 'placeOrder']);
         Route::post('/create-order', [StoreRazorpayPaymentController::class, 'createOrder']);
         Route::post('/verify-payment', [StoreRazorpayPaymentController::class, 'verify']);
         Route::post('/calculate-summary',[StoreRazorpayPaymentController::class, 'calculateSummary']);

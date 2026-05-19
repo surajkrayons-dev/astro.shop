@@ -24,7 +24,13 @@ $user = auth()->user();
                     </a>
                 </li>
 
-                <li class="menu-title">PERMISSIONS</li>
+                <li class="menu-title">PERMISSIONS & EMPLOYEES</li>
+                <li>
+                    <a href="{{ route('admin.employees.index') }}">
+                        <i class="bx bx-user-circle"></i>
+                        <span>Employees</span>
+                    </a>
+                </li>
                 <li>
                     <a href="{{ route('admin.permissions.index') }}">
                         <i class="bx bx-lock-alt"></i>

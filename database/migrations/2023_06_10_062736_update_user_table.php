@@ -23,7 +23,9 @@ return new class extends Migration
             $table->string('hash_token')->nullable()->after('remember_token');
             $table->string('otp', 10)->nullable()->after('hash_token');
             $table->timestamp('otp_created_at')->nullable()->after('otp');
-            $table->boolean('is_two_factor_auth_enabled')->default(false)->after('otp');
+            $table->timestamp('last_otp_sent_at')->nullable()->after('otp_created_at');
+            $table->integer('otp_attempts')->default(0)->after('last_otp_sent_at');
+            $table->boolean('is_two_factor_auth_enabled')->default(false)->after('otp_attempts');
             $table->string('device_token')->nullable()->after('is_two_factor_auth_enabled');
 
             $table->tinyInteger('status')->default(1)->after('device_token');

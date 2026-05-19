@@ -80,7 +80,7 @@
                     <!-- FOOTER -->
                     <tr>
                         <td style="background:#ffe0b2;text-align:center;padding:15px;font-size:12px;">
-                            🙏 Thank you for trusting Astrotring Store 💫<br>
+                            🙏 Thank you for trusting Astrotring Shop 💫<br>
                             We wish you positivity & success 🌟
                         </td>
                     </tr>

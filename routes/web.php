@@ -73,6 +73,19 @@ Route::namespace('App\Http\Controllers\Admin')
                         Route::get('/logout', 'ProfileController@getLogout')->name('logout');
                     });
 
+                Route::prefix('employees')
+                    ->name('employees.')
+                    ->group(function () {
+                        Route::get('/', 'EmployeeController@getIndex')->name('index');
+                        Route::get('list', 'EmployeeController@getList')->name('list');
+                        Route::get('create', 'EmployeeController@getCreate')->name('create.index');
+                        Route::post('create', 'EmployeeController@postCreate')->name('create');
+                        Route::get('update/{id?}', 'EmployeeController@getUpdate')->name('update.index');
+                        Route::post('update/{id?}', 'EmployeeController@postUpdate')->name('update');
+                        Route::get('delete/{id?}', 'EmployeeController@getDelete')->name('delete');
+                        Route::get('change/status/{id?}', 'EmployeeController@getChangeStatus')->name('change.status');
+                    });
+
                 Route::prefix('permissions')
                     ->name('permissions.')
                     ->group(function () {

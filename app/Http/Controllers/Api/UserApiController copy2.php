@@ -11,7 +11,6 @@ use App\Models\User;
 use App\Models\AlternativeAddress;
 use App\Models\Wallet;
 use App\Models\Review;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 
 class UserApiController extends Controller
@@ -19,10 +18,10 @@ class UserApiController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:users,email',
-            'mobile' => 'required|digits:10|unique:users,mobile',
-            'profile_image' => 'nullable|string|max:6000000',
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'mobile'   => 'required|digits:10|unique:users,mobile',
+            'profile_image' => 'nullable|string',
             'terms_accepted' => 'required|in:0,1',
         ]);
 
@@ -33,143 +32,62 @@ class UserApiController extends Controller
             ], 422);
         }
 
-        DB::beginTransaction();
+        $username = $request->mobile;
 
-        try {
-
-            $username = $request->mobile;
-
-            if (User::where('username', $username)->exists()) {
-                $username = $request->mobile . rand(100,999);
-            }
-
-            $autoPassword = substr($request->mobile, -4) . now()->format('dmY');
-
-            $email = $request->email;
-
-            if (!$email) {
-
-                $baseEmail = strtolower(
-                    preg_replace('/[^a-zA-Z0-9]/', '', $request->name)
-                );
-
-                $email = $baseEmail . time() . rand(100,999) . '@gmail.com';
-            }
-
-            $user = User::create([
-                'type' => 'user',
-                'role_id' => 3,
-                'code' => $this->generateUserCode($request->name),
-                'terms_accepted' => $request->terms_accepted,
-
-                'name' => $request->name,
-                'email' => strtolower($email),
-                'mobile' => $request->mobile,
-                'username' => $username,
-                'password' => bcrypt($autoPassword),
-
-                'status' => 1,
-            ]);
-
-            $otp = random_int(100000, 999999);
-
-            $user->update([
-                'otp' => $otp,
-                'otp_created_at' => now(),
-                'last_otp_sent_at' => now(),
-            ]);
-
-            $message = "Dear customer, {$otp} - is the OTP for Astrotring login - Astrotring TEXT2";
-
-            $params = [
-
-                'username'   => config('services.sms.username'),
-
-                'apikey'     => config('services.sms.api_key'),
-
-                'apirequest' => 'Text',
-
-                'sender'     => config('services.sms.sender'),
-
-                'mobile'     => $request->mobile,
-
-                'message'    => trim($message),
-
-                'route'      => config('services.sms.route'),
-
-                'TemplateID' => config('services.sms.template_id'),
-
-                'format'     => 'JSON',
-            ];
-
-            $response = Http::get(
-                config('services.sms.base_url'),
-                $params
-            );
-
-            \Log::info('SMS API LOG', [
-                'params' => $params,
-                'response' => $response->body(),
-            ]);
-
-            $responseData = $response->json();
-
-            if (
-                !$response->successful() ||
-                !isset($responseData['status']) ||
-                strtolower($responseData['status']) !== 'success'
-            ) {
-
-                $user->delete();
-
-                DB::rollBack();
-
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Failed to send OTP',
-                    'sms_response' => $response->body(),
-                ], 500);
-            }
-
-            if ($request->filled('profile_image')) {
-
-                $user->profile_image = $this->saveBase64Image(
-                    $request->profile_image,
-                    'user'
-                );
-
-                $user->save();
-            }
-
-            Wallet::create([
-                'user_id' => $user->id,
-                'balance' => 0,
-                'total_added' => 0,
-                'total_spent' => 0,
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                'status' => true,
-                'message' => 'OTP sent successfully for verification',
-            ]);
-
-        } catch (\Throwable $e) {
-
-            DB::rollBack();
-
-            return response()->json([
-                'status' => false,
-                'message' => 'Registration failed',
-            ], 500);
+        if (User::where('username', $username)->exists()) {
+            $username = explode('@', $request->email)[0] . rand(100,999);
         }
+
+        $autoPassword = substr($request->mobile, -4) . now()->format('dmY');
+
+        $user = User::create([
+            'type' => 'user',
+            'role_id' => 3,
+            'code' => $this->generateUserCode($request->name),
+            'terms_accepted' => $request->terms_accepted,
+
+            'name' => $request->name,
+            'email' => strtolower($request->email),
+            'mobile' => $request->mobile,
+            'username' => $username,
+            'password' => bcrypt($autoPassword),
+
+            'status' => 1,
+        ]);
+        
+        if ($request->filled('profile_image')) {
+            $user->profile_image = $this->saveBase64Image(
+                $request->profile_image,
+                'user'
+            );
+            $user->save();
+        }
+
+        Wallet::create([
+            'user_id' => $user->id,
+            'balance' => 0,
+            'total_added' => 0,
+            'total_spent' => 0,
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'User registered successfully',
+
+            'credentials' => [
+                'username' => $username,
+                'password' => $autoPassword,
+            ],
+
+            'token' => $user->createToken('auth_token')->plainTextToken,
+            'user' => $user->load('wallet'),
+        ]);
     }
 
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'mobile' => 'required|digits:10',
+            'email' => 'required|email',
         ]);
 
         if ($validator->fails()) {
@@ -179,7 +97,7 @@ class UserApiController extends Controller
             ], 422);
         }
 
-        $user = User::where('mobile', $request->mobile)
+        $user = User::where('email', strtolower($request->email))
             ->where('type', 'user')
             ->first();
 
@@ -199,71 +117,20 @@ class UserApiController extends Controller
             ], 403);
         }
 
-        if (
-            $user->last_otp_sent_at &&
-            now()->diffInSeconds($user->last_otp_sent_at) < 60
-        ) {
-
-            return response()->json([
-                'status' => false,
-                'message' => 'Please wait before requesting another OTP',
-            ], 429);
-        }
-
-        $otp = random_int(100000, 999999);
+        $otp = rand(100000, 999999);
 
         $user->update([
             'otp' => $otp,
             'otp_created_at' => now(),
-            'last_otp_sent_at' => now(),
         ]);
 
-        $message = "Dear customer, {$otp} - is the OTP for Astrotring login - Astrotring TEXT2";
-
-        $params = [
-
-            'username'   => config('services.sms.username'),
-
-            'apikey'     => config('services.sms.api_key'),
-
-            'apirequest' => 'Text',
-
-            'sender'     => config('services.sms.sender'),
-
-            'mobile'     => $request->mobile,
-
-            'message'    => trim($message),
-
-            'route'      => config('services.sms.route'),
-
-            'TemplateID' => config('services.sms.template_id'),
-
-            'format'     => 'JSON',
+        $mailData = [
+            'name' => $user->name,
+            'otp'  => $otp,
         ];
 
-        $response = Http::get(
-            config('services.sms.base_url'),
-            $params
-        );
-
-        \Log::info('SMS API LOG', [
-            'params' => $params,
-            'response' => $response->body(),
-        ]);
-
-        $responseData = $response->json();
-
-        if (
-            !$response->successful() ||
-            !isset($responseData['status']) ||
-            strtolower($responseData['status']) !== 'success'
-        ) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Failed to send OTP',
-                'sms_response' => $response->body(),
-            ], 500);
-        }
+        \Mail::to($user->email)
+            ->send(new \App\Mail\LoginOtpMail($mailData));
 
         return response()->json([
             'status' => true,
@@ -274,8 +141,8 @@ class UserApiController extends Controller
     public function verifyLoginOtp(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'mobile' => 'required|digits:10',
-            'otp' => 'required|digits:6',
+            'email' => 'required|email',
+            'otp'   => 'required|digits:6',
         ]);
 
         if ($validator->fails()) {
@@ -285,7 +152,7 @@ class UserApiController extends Controller
             ], 422);
         }
 
-        $user = User::where('mobile', $request->mobile)
+        $user = User::where('email', strtolower($request->email))
             ->where('type', 'user')
             ->first();
 
@@ -296,18 +163,7 @@ class UserApiController extends Controller
             ], 404);
         }
 
-        if ($user->otp_attempts >= 5) {
-
-            return response()->json([
-                'status' => false,
-                'message' => 'Too many wrong OTP attempts',
-            ], 429);
-        }
-
         if ($user->otp != $request->otp) {
-
-            $user->increment('otp_attempts');
-
             return response()->json([
                 'status' => false,
                 'message' => 'Invalid OTP',
@@ -317,13 +173,8 @@ class UserApiController extends Controller
         if (
             !$user->otp_created_at ||
             \Carbon\Carbon::parse($user->otp_created_at)
-                ->diffInMinutes(now()) > 5
+                ->diffInMinutes(now()) > 10
         ) {
-
-            $user->update([
-                'otp' => null,
-                'otp_created_at' => null,
-            ]);
 
             return response()->json([
                 'status' => false,
@@ -334,7 +185,6 @@ class UserApiController extends Controller
         $user->update([
             'otp' => null,
             'otp_created_at' => null,
-            'otp_attempts' => 0,
             'is_online' => 1,
             'last_seen_at' => now(),
         ]);
@@ -683,7 +533,7 @@ class UserApiController extends Controller
             ], 404);
         }
 
-        $otp = random_int(100000, 999999);
+        $otp = rand(100000, 999999);
 
         $user->update([
             'otp' => $otp,
@@ -740,7 +590,7 @@ class UserApiController extends Controller
         if (
             !$user->otp_created_at ||
             \Carbon\Carbon::parse($user->otp_created_at)
-                ->diffInMinutes(now()) > 5
+                ->diffInMinutes(now()) > 10
         ) {
 
             return response()->json([
@@ -757,102 +607,6 @@ class UserApiController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'OTP verified successfully',
-        ]);
-    }
-
-    public function resendOtp(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'mobile' => 'required|digits:10',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => $validator->errors()->first(),
-            ], 422);
-        }
-
-        $user = User::where('mobile', $request->mobile)
-            ->where('type', 'user')
-            ->first();
-
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'message' => 'User not found',
-            ], 404);
-        }
-
-        if (
-            $user->last_otp_sent_at &&
-            now()->diffInSeconds($user->last_otp_sent_at) < 60
-        ) {
-
-            return response()->json([
-                'status' => false,
-                'message' => 'Please wait before requesting another OTP',
-            ], 429);
-        }
-
-        $otp = random_int(100000, 999999);
-
-        $user->update([
-            'otp' => $otp,
-            'otp_created_at' => now(),
-            'last_otp_sent_at' => now(),
-        ]);
-
-        $message = "Dear customer, {$otp} - is the OTP for Astrotring login - Astrotring TEXT2";
-
-        $params = [
-
-            'username'   => config('services.sms.username'),
-
-            'apikey'     => config('services.sms.api_key'),
-
-            'apirequest' => 'Text',
-
-            'sender'     => config('services.sms.sender'),
-
-            'mobile'     => $request->mobile,
-
-            'message'    => trim($message),
-
-            'route'      => config('services.sms.route'),
-
-            'TemplateID' => config('services.sms.template_id'),
-
-            'format'     => 'JSON',
-        ];
-
-        $response = Http::get(
-            config('services.sms.base_url'),
-            $params
-        );
-
-        \Log::info('SMS API LOG', [
-            'params' => $params,
-            'response' => $response->body(),
-        ]);
-
-        $responseData = $response->json();
-
-        if (
-            !$response->successful() ||
-            !isset($responseData['status']) ||
-            strtolower($responseData['status']) !== 'success'
-        ) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Failed to send OTP',
-                'sms_response' => $response->body(),
-            ], 500);
-        }
-
-        return response()->json([
-            'status' => true,
-            'message' => 'OTP resent successfully',
         ]);
     }
 
