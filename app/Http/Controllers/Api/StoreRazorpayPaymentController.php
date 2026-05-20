@@ -51,33 +51,57 @@ class StoreRazorpayPaymentController extends Controller
             $subtotal = $validatedCart['subtotal'];
 
             $discount = 0;
+            $couponId = null;
 
             if ($request->coupon_code) {
 
                 $coupon = Coupon::where('code', $request->coupon_code)
                     ->where('status', 1)
                     ->whereDate('expiry_date', '>=', now())
+                    ->lockForUpdate()
                     ->first();
 
-                if ($coupon) {
+                if (!$coupon) {
 
-                    if ($coupon->min_amount && $subtotal < $coupon->min_amount) {
-                        return response()->json([
-                            'status' => false,
-                            'message' => 'Coupon min amount not met'
-                        ]);
-                    }
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Invalid coupon'
+                    ], 422);
+                }
 
-                    if ($coupon->discount_type == 'flat') {
-                        $discount = $coupon->discount_value;
-                    } else {
-                        $discount = ($subtotal * $coupon->discount_value) / 100;
+                if (
+                    $coupon->min_amount &&
+                    $subtotal < $coupon->min_amount
+                ) {
 
-                        if ($coupon->max_discount) {
-                            $discount = min($discount, $coupon->max_discount);
-                        }
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Coupon minimum amount not met'
+                    ], 422);
+                }
+
+                if ($coupon->discount_type == 'flat') {
+
+                    $discount = (float) $coupon->discount_value;
+
+                } else {
+
+                    $discount =
+                        ($subtotal * $coupon->discount_value) / 100;
+
+                    if ($coupon->max_discount) {
+
+                        $discount = min(
+                            $discount,
+                            $coupon->max_discount
+                        );
                     }
                 }
+
+                // SAFETY
+                $discount = min($discount, $subtotal);
+
+                $couponId = $coupon->id;
             }
 
             $afterDiscount = max(0, $subtotal - $discount);
@@ -260,26 +284,45 @@ class StoreRazorpayPaymentController extends Controller
                 $coupon = Coupon::where('code', $request->coupon_code)
                     ->where('status', 1)
                     ->whereDate('expiry_date', '>=', now())
+                    ->lockForUpdate()
                     ->first();
 
-                if ($coupon) {
-
-                    if ($coupon->min_amount && $subtotal < $coupon->min_amount) {
-                        throw new \Exception('Coupon min amount not met');
-                    }
-
-                    if ($coupon->discount_type == 'flat') {
-                        $discount = $coupon->discount_value;
-                    } else {
-                        $discount = ($subtotal * $coupon->discount_value) / 100;
-
-                        if ($coupon->max_discount) {
-                            $discount = min($discount, $coupon->max_discount);
-                        }
-                    }
-
-                    $couponId = $coupon->id;
+                if (!$coupon) {
+                    throw new \Exception('Invalid coupon');
                 }
+
+                if (
+                    $coupon->min_amount &&
+                    $subtotal < $coupon->min_amount
+                ) {
+
+                    throw new \Exception(
+                        'Coupon minimum amount not met'
+                    );
+                }
+
+                if ($coupon->discount_type == 'flat') {
+
+                    $discount = (float) $coupon->discount_value;
+
+                } else {
+
+                    $discount =
+                        ($subtotal * $coupon->discount_value) / 100;
+
+                    if ($coupon->max_discount) {
+
+                        $discount = min(
+                            $discount,
+                            $coupon->max_discount
+                        );
+                    }
+                }
+
+                // SAFETY
+                $discount = min($discount, $subtotal);
+
+                $couponId = $coupon->id;
             }
 
             $afterDiscount = max(0, $subtotal - $discount);
@@ -703,7 +746,7 @@ class StoreRazorpayPaymentController extends Controller
             ], 422);
         }
     }
-
+    
     public function calculateSummary(Request $request)
     {
         try {
@@ -711,12 +754,8 @@ class StoreRazorpayPaymentController extends Controller
             $user = $request->user();
 
             $request->validate([
-                'coupon_code' => 'nullable|string',
                 'address_id' => 'nullable|exists:alternative_addresses,id',
-                'wallet_amount' => 'nullable|numeric|min:0',
             ]);
-
-            $walletInput = $request->wallet_amount ?? 0;
 
             // CART
             $cart = Cart::where('user_id', $user->id)
@@ -737,65 +776,12 @@ class StoreRazorpayPaymentController extends Controller
 
             $subtotal = $validatedCart['subtotal'];
 
-            // COUPON
-            $discount = 0;
-
-            if ($request->coupon_code) {
-
-                $coupon = Coupon::where(
-                        'code',
-                        $request->coupon_code
-                    )
-                    ->where('status', 1)
-                    ->whereDate('expiry_date', '>=', now())
-                    ->first();
-
-                if ($coupon) {
-
-                    if (
-                        $coupon->min_amount &&
-                        $subtotal < $coupon->min_amount
-                    ) {
-
-                        return response()->json([
-                            'status' => false,
-                            'message' => 'Coupon min amount not met'
-                        ]);
-                    }
-
-                    if ($coupon->discount_type == 'flat') {
-
-                        $discount = $coupon->discount_value;
-
-                    } else {
-
-                        $discount =
-                            ($subtotal * $coupon->discount_value) / 100;
-
-                        if ($coupon->max_discount) {
-
-                            $discount = min(
-                                $discount,
-                                $coupon->max_discount
-                            );
-                        }
-                    }
-                }
-            }
-
-            $afterDiscount = max(
-                0,
-                $subtotal - $discount
-            );
-
             // DELIVERY
             $deliveryCharge = 0;
 
             if ($request->address_id) {
 
-                $address = AlternativeAddress::find(
-                    $request->address_id
-                );
+                $address = AlternativeAddress::find($request->address_id);
 
                 if ($address && $address->state) {
 
@@ -807,40 +793,14 @@ class StoreRazorpayPaymentController extends Controller
                         ->first();
 
                     if ($deliveryRate) {
-                        $deliveryCharge = $subtotal >= 800 ? 0 : (float) $deliveryRate->delivery_charge;
+
+                        $deliveryCharge =
+                            $subtotal >= 800
+                                ? 0
+                                : (float) $deliveryRate->delivery_charge;
                     }
                 }
             }
-
-            // WALLET
-            $wallet = StoreWallet::where(
-                    'user_id',
-                    $user->id
-                )
-                ->first();
-
-            $walletBalance = $wallet->balance ?? 0;
-
-            if ($walletInput > $walletBalance) {
-
-                $walletInput = $walletBalance;
-            }
-
-            if (
-                $walletInput >
-                ($afterDiscount + $deliveryCharge)
-            ) {
-
-                $walletInput =
-                    ($afterDiscount + $deliveryCharge);
-            }
-
-            $walletUsed = $walletInput;
-
-            $finalAmount = max(
-                0,
-                ($afterDiscount + $deliveryCharge) - $walletUsed
-            );
 
             return response()->json([
 
@@ -850,15 +810,10 @@ class StoreRazorpayPaymentController extends Controller
 
                     'subtotal' => $subtotal,
 
-                    'discount' => $discount,
-
                     'delivery_charge' => $deliveryCharge,
 
-                    'wallet_balance' => $walletBalance,
-
-                    'wallet_used' => $walletUsed,
-
-                    'final_amount' => $finalAmount
+                    'final_amount' =>
+                        $subtotal + $deliveryCharge
                 ]
             ]);
 

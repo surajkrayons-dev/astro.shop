@@ -79,17 +79,27 @@ class UserApiController extends Controller
                 'last_otp_sent_at' => now(),
             ]);
 
-            $message = "{$otp} is your OTP to access {$otp}. OTP is confidential and valid for 10 minutes. For security reasons, DO NOT share this OTP with anyone. MangalBhav Connect Icon";
+            $message = "Dear customer, {$otp} - is the OTP for Astrotring login - Astrotring TEXT2";
 
             $params = [
+
                 'username'   => config('services.sms.username'),
-                'dest'       => $request->mobile,
+
                 'apikey'     => config('services.sms.api_key'),
-                'signature'  => config('services.sms.sender'),
-                'msgType'    => 'PM',
-                'msgtxt'     => trim($message),
-                'entityid'   => config('services.sms.entity_id'),
-                'templateid' => config('services.sms.template_id'),
+
+                'apirequest' => 'Text',
+
+                'sender'     => config('services.sms.sender'),
+
+                'mobile'     => $request->mobile,
+
+                'message'    => trim($message),
+
+                'route'      => config('services.sms.route'),
+
+                'TemplateID' => config('services.sms.template_id'),
+
+                'format'     => 'JSON',
             ];
 
             $response = Http::get(
@@ -106,8 +116,8 @@ class UserApiController extends Controller
 
             if (
                 !$response->successful() ||
-                !isset($responseData['code']) ||
-                $responseData['code'] != '6001'
+                !isset($responseData['status']) ||
+                strtolower($responseData['status']) !== 'success'
             ) {
 
                 $user->delete();
@@ -208,17 +218,27 @@ class UserApiController extends Controller
             'last_otp_sent_at' => now(),
         ]);
 
-        $message = "{$otp} is your OTP to access {$otp}. OTP is confidential and valid for 10 minutes. For security reasons, DO NOT share this OTP with anyone. MangalBhav Connect Icon";
+        $message = "Dear customer, {$otp} - is the OTP for Astrotring login - Astrotring TEXT2";
 
         $params = [
+
             'username'   => config('services.sms.username'),
-            'dest'       => $request->mobile,
+
             'apikey'     => config('services.sms.api_key'),
-            'signature'  => config('services.sms.sender'),
-            'msgType'    => 'PM',
-            'msgtxt'     => trim($message),
-            'entityid'   => config('services.sms.entity_id'),
-            'templateid' => config('services.sms.template_id'),
+
+            'apirequest' => 'Text',
+
+            'sender'     => config('services.sms.sender'),
+
+            'mobile'     => $request->mobile,
+
+            'message'    => trim($message),
+
+            'route'      => config('services.sms.route'),
+
+            'TemplateID' => config('services.sms.template_id'),
+
+            'format'     => 'JSON',
         ];
 
         $response = Http::get(
@@ -235,8 +255,8 @@ class UserApiController extends Controller
 
         if (
             !$response->successful() ||
-            !isset($responseData['code']) ||
-            $responseData['code'] != '6001'
+            !isset($responseData['status']) ||
+            strtolower($responseData['status']) !== 'success'
         ) {
             return response()->json([
                 'status' => false,
@@ -783,17 +803,27 @@ class UserApiController extends Controller
             'last_otp_sent_at' => now(),
         ]);
 
-        $message = "{$otp} is your OTP to access {$otp}. OTP is confidential and valid for 10 minutes. For security reasons, DO NOT share this OTP with anyone. MangalBhav Connect Icon";
+        $message = "Dear customer, {$otp} - is the OTP for Astrotring login - Astrotring TEXT2";
 
         $params = [
+
             'username'   => config('services.sms.username'),
-            'dest'       => $request->mobile,
+
             'apikey'     => config('services.sms.api_key'),
-            'signature'  => config('services.sms.sender'),
-            'msgType'    => 'PM',
-            'msgtxt'     => trim($message),
-            'entityid'   => config('services.sms.entity_id'),
-            'templateid' => config('services.sms.template_id'),
+
+            'apirequest' => 'Text',
+
+            'sender'     => config('services.sms.sender'),
+
+            'mobile'     => $request->mobile,
+
+            'message'    => trim($message),
+
+            'route'      => config('services.sms.route'),
+
+            'TemplateID' => config('services.sms.template_id'),
+
+            'format'     => 'JSON',
         ];
 
         $response = Http::get(
@@ -810,8 +840,8 @@ class UserApiController extends Controller
 
         if (
             !$response->successful() ||
-            !isset($responseData['code']) ||
-            $responseData['code'] != '6001'
+            !isset($responseData['status']) ||
+            strtolower($responseData['status']) !== 'success'
         ) {
             return response()->json([
                 'status' => false,

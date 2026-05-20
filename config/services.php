@@ -43,12 +43,21 @@ return [
     //     'entity_id' => env('VISPL_ENTITY_ID'),
     // ],
 
+    // 'sms' => [
+    //     'base_url' => env('SMS_BASE_URL'),
+    //     'username' => env('SMS_USERNAME'),
+    //     'api_key' => env('SMS_API_KEY'),
+    //     'sender' => env('SMS_SENDER'),
+    //     'route' => env('SMS_ROUTE'),
+    //     'template_id' => env('SMS_TEMPLATE_ID'),
+    // ],
+
     'sms' => [
         'base_url' => env('SMS_BASE_URL'),
         'username' => env('SMS_USERNAME'),
         'api_key' => env('SMS_API_KEY'),
         'sender' => env('SMS_SENDER'),
-        'route' => env('SMS_ROUTE'),
+        'entity_id' => env('SMS_ENTITY_ID'),
         'template_id' => env('SMS_TEMPLATE_ID'),
     ],
 ];
