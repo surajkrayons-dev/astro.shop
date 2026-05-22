@@ -79,28 +79,7 @@ class UserApiController extends Controller
                 'last_otp_sent_at' => now(),
             ]);
 
-            $message = "{$otp} is your OTP to access {$otp}. OTP is confidential and valid for 10 minutes. For security reasons, DO NOT share this OTP with anyone. MangalBhav Connect Icon";
-
-            $params = [
-                'username'   => config('services.sms.username'),
-                'dest'       => $request->mobile,
-                'apikey'     => config('services.sms.api_key'),
-                'signature'  => config('services.sms.sender'),
-                'msgType'    => 'PM',
-                'msgtxt'     => trim($message),
-                'entityid'   => config('services.sms.entity_id'),
-                'templateid' => config('services.sms.template_id'),
-            ];
-
-            $response = Http::get(
-                config('services.sms.base_url'),
-                $params
-            );
-
-            \Log::info('SMS API LOG', [
-                'params' => $params,
-                'response' => $response->body(),
-            ]);
+            $response = $this->sendOtpSms($request->mobile, $otp);
 
             $responseData = $response->json();
 
@@ -208,28 +187,7 @@ class UserApiController extends Controller
             'last_otp_sent_at' => now(),
         ]);
 
-        $message = "{$otp} is your OTP to access {$otp}. OTP is confidential and valid for 10 minutes. For security reasons, DO NOT share this OTP with anyone. MangalBhav Connect Icon";
-
-        $params = [
-            'username'   => config('services.sms.username'),
-            'dest'       => $request->mobile,
-            'apikey'     => config('services.sms.api_key'),
-            'signature'  => config('services.sms.sender'),
-            'msgType'    => 'PM',
-            'msgtxt'     => trim($message),
-            'entityid'   => config('services.sms.entity_id'),
-            'templateid' => config('services.sms.template_id'),
-        ];
-
-        $response = Http::get(
-            config('services.sms.base_url'),
-            $params
-        );
-
-        \Log::info('SMS API LOG', [
-            'params' => $params,
-            'response' => $response->body(),
-        ]);
+        $response = $this->sendOtpSms($request->mobile, $otp);
 
         $responseData = $response->json();
 
@@ -783,28 +741,7 @@ class UserApiController extends Controller
             'last_otp_sent_at' => now(),
         ]);
 
-        $message = "{$otp} is your OTP to access {$otp}. OTP is confidential and valid for 10 minutes. For security reasons, DO NOT share this OTP with anyone. MangalBhav Connect Icon";
-
-        $params = [
-            'username'   => config('services.sms.username'),
-            'dest'       => $request->mobile,
-            'apikey'     => config('services.sms.api_key'),
-            'signature'  => config('services.sms.sender'),
-            'msgType'    => 'PM',
-            'msgtxt'     => trim($message),
-            'entityid'   => config('services.sms.entity_id'),
-            'templateid' => config('services.sms.template_id'),
-        ];
-
-        $response = Http::get(
-            config('services.sms.base_url'),
-            $params
-        );
-
-        \Log::info('SMS API LOG', [
-            'params' => $params,
-            'response' => $response->body(),
-        ]);
+        $response = $this->sendOtpSms($request->mobile, $otp);
 
         $responseData = $response->json();
 
@@ -864,5 +801,37 @@ class UserApiController extends Controller
             'status' => true,
             'message' => 'Password reset successfully',
         ]);
+    }
+
+    private function sendOtpSms($mobile, $otp)
+    {
+        $message = "Dear customer, {$otp} is the OTP for your login at astrotring.shop - Astrotring Veltex";
+
+        $params = [
+            'username'   => config('services.sms.username'),
+            'dest'       => $mobile,
+            'apikey'     => config('services.sms.api_key'),
+            'signature'  => config('services.sms.sender'),
+            'msgtype'    => 'PM',
+            'msgtxt'     => $message,
+            'entityid'   => config('services.sms.entity_id'),
+            'templateid' => config('services.sms.template_id'),
+        ];
+
+        $response = Http::timeout(30)->get(
+            config('services.sms.base_url'),
+            $params
+        );
+
+        \Log::info('SMS API REQUEST', [
+            'params' => $params,
+        ]);
+
+        \Log::info('SMS API RESPONSE', [
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ]);
+
+        return $response;
     }
 }
