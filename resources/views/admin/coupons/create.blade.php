@@ -12,6 +12,21 @@
 
                 <div class="col-lg-6">
                     <div class="form-group">
+                        <label class="form-label"><Em>Employee</Em> <sup class="text-danger fs-5">*</sup> :</label>
+                        <select class="form-control select2-class2" name="employee_id" id="modal_employee_id"
+                            data-placeholder="Select Employee">
+                            <option value=""></option>
+                            @foreach (\App\Models\User::where('type', 'employee')->orderBy('name')->get() as $employee)
+                                <option value="{{ $employee->id }}">
+                                    {{ $employee->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="form-group">
                         <label class="form-label">Coupon Code <sup class="text-danger fs-5">*</sup> :</label>
                         <input type="text" name="code" class="form-control" placeholder="e.g. WELCOME10">
                     </div>

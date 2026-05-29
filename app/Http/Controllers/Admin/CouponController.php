@@ -16,12 +16,15 @@ class CouponController extends AdminController
 
     public function getList(Request $request)
     {
-        $list = Coupon::query()
+        $list = Coupon::with('employee')
             ->when($request->filled('id'),
                 fn($q) => $q->where('id', $request->id)
             )
             ->when($request->filled('discount_type'),
                 fn($q) => $q->where('discount_type', $request->discount_type)
+            )
+            ->when($request->filled('employee_id'),
+                fn($q) => $q->where('employee_id', $request->employee_id)
             )
             ->when($request->status !== null && $request->status !== "",
                 fn($q) => $q->where('status', $request->status)
@@ -48,6 +51,9 @@ class CouponController extends AdminController
             ->editColumn('expiry_date', function ($row) {
                 return Carbon::parse($row->expiry_date)->format('d M Y');
             })
+            ->addColumn('employee', function ($row) {
+                return $row->employee?->name ?? '-';
+            })
             ->addColumn('status_label', function ($row) {
                 return $row->status
                     ? '<span class="badge bg-success">Active</span>'
@@ -70,6 +76,7 @@ class CouponController extends AdminController
     public function postCreate(Request $request)
     {
         $request->validate([
+            'employee_id'     => 'nullable|exists:users,id',
             'code'            => 'required|string|max:50|unique:coupons,code',
             'discount_type'   => 'required|in:flat,percentage',
             'discount_value'  => 'required|numeric|min:0.01',
@@ -96,6 +103,7 @@ class CouponController extends AdminController
         }
 
         Coupon::create([
+            'employee_id'    => $request->employee_id ?? 1,
             'code'           => strtoupper(trim($request->code)),
             'discount_type'  => $request->discount_type,
             'discount_value' => $request->discount_value,
@@ -122,6 +130,7 @@ class CouponController extends AdminController
         $coupon = Coupon::findOrFail($id);
 
         $request->validate([
+            'employee_id'    => 'nullable|exists:users,id',
             'code'           => 'required|string|max:50|unique:coupons,code,'.$coupon->id,
             'discount_type'  => 'required|in:flat,percentage',
             'discount_value' => 'required|numeric|min:0.01',
@@ -149,6 +158,7 @@ class CouponController extends AdminController
         }
 
         $coupon->update([
+            'employee_id'    => $request->employee_id ?? 1,
             'code'           => strtoupper(trim($request->code)),
             'discount_type'  => $request->discount_type,
             'discount_value' => $request->discount_value,

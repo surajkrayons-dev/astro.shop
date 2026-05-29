@@ -26,7 +26,7 @@ class OrderController extends Controller
 
     public function getList(Request $request)
     {
-        $orders = Order::with(['user', 'items.product.category'])
+        $orders = Order::with(['user', 'coupon', 'items.product.category'])
             ->when($request->user_id, function ($q) use ($request) {
                 $q->where('user_id', $request->user_id);
             })
@@ -42,6 +42,11 @@ class OrderController extends Controller
             })
             ->when($request->status, function ($q) use ($request) {
                 $q->where('status', $request->status);
+            })
+            ->when(auth()->user()->type == 'employee', function ($q) {
+                $q->whereHas('coupon', function ($coupon) {
+                    $coupon->where('employee_id', auth()->id());
+                });
             })
             ->latest();
 
@@ -103,6 +108,16 @@ class OrderController extends Controller
                 $q->select('id','product_id','user_id','rating','review');
             }
         ])->findOrFail($id);
+
+        if (
+            auth()->user()->type == 'employee' &&
+            (
+                !$order->coupon ||
+                $order->coupon->employee_id != auth()->id()
+            )
+        ) {
+            abort(403);
+        }
 
         return view('admin.orders.view', compact('order'));
     }

@@ -1,4 +1,3 @@
-```blade
 @php
     $user = $order->user;
 

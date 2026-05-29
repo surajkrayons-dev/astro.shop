@@ -46,6 +46,18 @@
                         </div>
 
                         <div class="col">
+                            <label class="form-label fw-bold">Employee</label>
+                            <select id="employee_id" class="form-control select2-class2" data-placeholder="Select Employee">
+                                <option value=""></option>
+                                @foreach (\App\Models\User::where('type', 'employee')->orderBy('name')->get() as $employee)
+                                    <option value="{{ $employee->id }}">
+                                        {{ $employee->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col">
                             <label class="form-label fw-bold">Type</label>
                             <select class="form-control select2-class2" id="discount_type" data-placeholder="Choose Type">
                                 <option value=""></option>
@@ -65,7 +77,8 @@
 
                         <div class="col">
                             <label class="form-label fw-bold">Visible</label>
-                            <select class="form-control select2-class2" id="is_visible" data-placeholder="Choose Visibility">
+                            <select class="form-control select2-class2" id="is_visible"
+                                data-placeholder="Choose Visibility">
                                 <option value=""></option>
                                 <option value="1">Visible</option>
                                 <option value="0">Hidden</option>
@@ -86,6 +99,7 @@
                         <thead>
                             <tr>
                                 <th>Code</th>
+                                {{-- <th>Employee</th> --}}
                                 <th>Type</th>
                                 <th>Value</th>
                                 <th>Expiry</th>
@@ -114,6 +128,7 @@
                     url: "{{ route('admin.coupons.list') }}",
                     data: function(d) {
                         d.id = $('#id').val();
+                        d.employee_id = $('#employee_id').val();
                         d.discount_type = $('#discount_type').val();
                         d.status = $('#status').val();
                         d.is_visible = $('#is_visible').val();
@@ -123,6 +138,10 @@
                         data: 'code',
                         name: 'code'
                     },
+                    // {
+                    //     data: 'employee',
+                    //     name: 'employee.name'
+                    // },
                     {
                         data: 'discount_type',
                         name: 'discount_type'
@@ -237,12 +256,13 @@
                     });
             });
 
-            $('#id, #discount_type, #status, #is_visible').on('change', function() {
+            $('#id, #employee_id, #discount_type, #status, #is_visible').on('change', function() {
                 table.ajax.reload();
             });
 
             $('#reset-filter').on('click', function() {
                 $('#id').val('').trigger('change');
+                $('#employee_id').val('').trigger('change');
                 $('#discount_type').val('').trigger('change');
                 $('#status').val('').trigger('change');
                 $('#is_visible').val('').trigger('change');

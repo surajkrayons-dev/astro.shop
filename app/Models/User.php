@@ -298,6 +298,11 @@ class User extends Authenticatable
         return $this->hasMany(Order::class);
     }
 
+    public function coupons()
+    {
+        return $this->hasMany(Coupon::class, 'employee_id');
+    }
+
     public function walletTransactions()
     {
         return $this->hasMany(StoreWalletTransaction::class);
