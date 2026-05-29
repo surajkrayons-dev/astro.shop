@@ -11,6 +11,24 @@
 
             <div class="row">
 
+                {{-- Employee --}}
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label class="form-label">
+                            Employee <sup class="text-danger fs-5">*</sup> :
+                        </label>
+                        <select class="form-control select2-update" name="employee_id" id="update_employee_id"
+                            data-placeholder="Select Employee">
+                            <option value=""></option>
+                            @foreach (\App\Models\User::where('type', 'employee')->orderBy('name')->get() as $employee)
+                                <option value="{{ $employee->id }}" {{ $coupon->employee_id == $employee->id ? 'selected' : '' }}>
+                                    {{ $employee->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
                 {{-- Coupon Code --}}
                 <div class="col-lg-6">
                     <div class="form-group">

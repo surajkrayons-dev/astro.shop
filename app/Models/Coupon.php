@@ -12,6 +12,7 @@ class Coupon extends Model
     protected $table = 'coupons';
 
     protected $fillable = [
+        'employee_id',
         'code',
         'discount_type',
         'discount_value',
@@ -21,4 +22,9 @@ class Coupon extends Model
         'status',
         'is_visible',
     ];
+
+    public function employee()
+    {
+        return $this->belongsTo(User::class, 'employee_id');
+    }
 }

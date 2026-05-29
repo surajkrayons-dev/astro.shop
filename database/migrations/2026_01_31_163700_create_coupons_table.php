@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('coupons', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('employee_id')->nullable();
             $table->string('code')->unique();
             $table->enum('discount_type', ['flat','percentage']);
             $table->decimal('discount_value', 10, 2);
@@ -21,8 +22,12 @@ return new class extends Migration
             $table->date('expiry_date');
             $table->boolean('status')->default(1);
             $table->boolean('is_visible')->default(1);
-
             $table->timestamps();
+
+            $table->foreign('employee_id')
+              ->references('id')
+              ->on('users')
+              ->nullOnDelete();
         });
     }
 

@@ -1,6 +1,7 @@
 
 body[data-sidebar=dark] .navbar-brand-box {
-    background: #222736;
+    /* background: #222736; */
+    background: #cdcccc;
 }
 
 input[readonly].form-control {
