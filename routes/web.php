@@ -86,6 +86,22 @@ Route::namespace('App\Http\Controllers\Admin')
                         Route::get('change/status/{id?}', 'EmployeeController@getChangeStatus')->name('change.status');
                     });
 
+                Route::prefix('order_delivery')
+                    ->name('order_delivery.')
+                    ->group(function () {
+                        Route::get('/','OrderDeliveryController@getIndex')->name('index');
+                        Route::post('/search','OrderDeliveryController@postSearch')->name('search');
+                        Route::post('/delivered/{id}','OrderDeliveryController@postDelivered')->name('delivered');
+                    });
+
+                Route::prefix('employee_earnings')
+                    ->name('employee_earnings.')
+                    ->group(function () {
+                        Route::get('/', 'EmployeeEarningController@getIndex')->name('index');
+                        Route::get('list', 'EmployeeEarningController@getList')->name('list');
+                        Route::get('view/{id?}', 'EmployeeEarningController@getView')->name('view');
+                    });
+
                 Route::prefix('permissions')
                     ->name('permissions.')
                     ->group(function () {
