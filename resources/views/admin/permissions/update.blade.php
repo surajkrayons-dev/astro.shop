@@ -38,6 +38,7 @@
                 ['key' => 'product_categories', 'label' => 'Product Category', 'icon' => 'fas fa-th-large'],
                 ['key' => 'products', 'label' => 'Products', 'icon' => 'fas fa-box'],
                 ['key' => 'orders', 'label' => 'Orders', 'icon' => 'fas fa-shopping-cart'],
+                ['key' => 'employee_earnings', 'label' => 'Employee Earnings', 'icon' => 'fas fa-money-bill-wave'],
                 ['key' => 'returns', 'label' => 'Returns', 'icon' => 'fas fa-undo'],
                 ['key' => 'store_banners', 'label' => 'Store Banner', 'icon' => 'fas fa-images'],
             ];

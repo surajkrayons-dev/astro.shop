@@ -88,6 +88,20 @@ $user = auth()->user();
                 </li>
 
                 <li>
+                    <a href="{{ route('admin.order_delivery.index') }}">
+                        <i class="bx bx-store"></i>
+                        <span>Order Delivery</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ route('admin.employee_earnings.index') }}">
+                        <i class="bx bx-rupee"></i>
+                        <span>Employee Earnings</span>
+                    </a>
+                </li>
+
+                <li>
                     <a href="{{ route('admin.returns.index') }}">
                         <i class="bx bx-undo"></i>
                         <span>Returns</span>
@@ -193,7 +207,7 @@ $user = auth()->user();
                     @endif
 
                     {{-- ORDERS --}}
-                    @if($user->hasAccess('orders') || $user->hasAccess('returns'))
+                    @if($user->hasAccess('orders') || $user->hasAccess('returns') || $user->hasAccess('employee_earnings'))
                     <li class="menu-title">ORDERS & RETURNS</li>
                     @endif
 
@@ -202,6 +216,15 @@ $user = auth()->user();
                         <a href="{{ route('admin.orders.index') }}">
                             <i class="bx bx-cart"></i>
                             <span>Orders</span>
+                        </a>
+                    </li>
+                    @endif
+
+                    @if($user->hasAccess('employee_earnings'))
+                    <li>
+                        <a href="{{ route('admin.employee_earnings.index') }}">
+                            <i class="bx bx-rupee"></i>
+                            <span>My Earnings</span>
                         </a>
                     </li>
                     @endif

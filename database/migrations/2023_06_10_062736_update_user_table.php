@@ -75,7 +75,8 @@ return new class extends Migration
 
             /* HR */
             $table->decimal('salary', 10, 2)->nullable()->after('pincode_id');
-            $table->date('date_of_joining')->nullable()->after('salary');
+            $table->decimal('commission_percentage', 5, 2)->default(0)->after('salary');
+            $table->date('date_of_joining')->nullable()->after('commission_percentage');
 
             /* AUDIT */
             $table->unsignedBigInteger('created_by')->nullable()->after('date_of_joining');
