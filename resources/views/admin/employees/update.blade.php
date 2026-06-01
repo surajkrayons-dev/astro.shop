@@ -107,6 +107,30 @@
 
                             </div>
 
+                            {{-- DATE OF JOINING --}}
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label fw-bold">
+                                    Date Of Joining
+                                </label>
+
+                                <input type="date" name="date_of_joining" class="form-control"
+                                    value="{{ $employee->date_of_joining ? \Carbon\Carbon::parse($employee->date_of_joining)->format('Y-m-d') : '' }}">
+
+                            </div>
+
+                            {{-- COMMISSION PERCENTAGE --}}
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label fw-bold">
+                                    Commission Percentage
+                                </label>
+                                <input type="number" name="commission_percentage" class="form-control"
+                                    placeholder="Enter Commission Percentage" min="0" max="100"
+                                    value="{{ $employee->commission_percentage ?? 5 }}">
+
+                            </div>
+
                             {{-- PASSWORD --}}
                             <div class="col-md-6 mb-3">
 
@@ -127,18 +151,6 @@
 
                                 <input type="password" name="password_confirmation" class="form-control"
                                     placeholder="Confirm Password">
-
-                            </div>
-
-                            {{-- DATE OF JOINING --}}
-                            <div class="col-md-6 mb-3">
-
-                                <label class="form-label fw-bold">
-                                    Date Of Joining
-                                </label>
-
-                                <input type="date" name="date_of_joining" class="form-control"
-                                    value="{{ $employee->date_of_joining ? \Carbon\Carbon::parse($employee->date_of_joining)->format('Y-m-d') : '' }}">
 
                             </div>
 

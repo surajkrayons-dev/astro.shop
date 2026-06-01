@@ -49,6 +49,7 @@ class EmployeeController extends AdminController
             'country_code' => 'required|string|max:5',
             'mobile' => 'nullable|digits:10|unique:users,mobile',
             'username' => 'required|unique:users,username',
+            'commission_percentage' => 'nullable|numeric|min:0|max:100',
             'password' => 'required|min:6|confirmed',
             'date_of_joining' => 'nullable|date',
             'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:4096',
@@ -72,6 +73,7 @@ class EmployeeController extends AdminController
             $employee->country_code = $request->country_code;
             $employee->mobile = $request->mobile;
             $employee->username = strtolower($request->username);
+            $employee->commission_percentage = $request->commission_percentage ?? 5;
             $employee->password = bcrypt($request->password);
             $employee->date_of_joining = $request->date_of_joining;
             $employee->address = $request->address;
@@ -115,6 +117,7 @@ class EmployeeController extends AdminController
             'country_code' => "required|string|max:5",
             'mobile' => "nullable|digits:10|unique:users,mobile,{$request->id}",
             'username' => "required|unique:users,username,{$request->id}",
+            'commission_percentage' => 'nullable|numeric|min:0|max:100',
             'password' => 'nullable|min:6|confirmed',
             'date_of_joining' => 'nullable|date',
             'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:4096',
@@ -137,6 +140,7 @@ class EmployeeController extends AdminController
             $employee->country_code = $request->country_code;
             $employee->mobile = $request->mobile;
             $employee->username = strtolower($request->username);
+            $employee->commission_percentage = $request->filled('commission_percentage') ? $request->commission_percentage : $employee->commission_percentage;
             if ($request->filled('password')) {
 
                 $employee->password = bcrypt($request->password);
