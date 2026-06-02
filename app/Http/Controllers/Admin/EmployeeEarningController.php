@@ -28,6 +28,13 @@ class EmployeeEarningController extends AdminController
             )
         )
         ->when(
+            $request->employee_id,
+            fn($q) => $q->where(
+                'employee_id',
+                $request->employee_id
+            )
+        )
+        ->when(
             $request->status,
             fn($q) => $q->where(
                 'status',
@@ -37,61 +44,43 @@ class EmployeeEarningController extends AdminController
         ->latest();
 
         return \DataTables::of($list)
+            ->addColumn('code_name', function ($row) {
 
-            ->addColumn('employee', function ($row) {
-
-                return $row->employee?->name ?? '-';
-
+                return '[ <b>' . e($row->employee->username) . '</b> ]<br>' . e($row->employee->name);
             })
-
             ->addColumn('order_number', function ($row) {
 
                 return $row->order?->order_number ?? '-';
 
             })
-
             ->addColumn('coupon_code', function ($row) {
 
                 return $row->coupon?->code ?? '-';
 
             })
-
             ->addColumn('order_amount', function ($row) {
-
                 return '₹ ' .
                     number_format(
                         $row->order_amount,
                         2
                     );
-
             })
-
             ->addColumn('commission_percentage', function ($row) {
-
                 return $row->commission_percentage.'%';
-
             })
-
             ->addColumn('commission_amount', function ($row) {
-
                 return '₹ ' .
                     number_format(
                         $row->commission_amount,
                         2
                     );
-
             })
-
             ->addColumn('status_badge', function ($row) {
-
                 return $row->status == 'paid'
                     ? '<span class="badge bg-success">Paid</span>'
                     : '<span class="badge bg-warning">Pending</span>';
-
             })
-
             ->addColumn('action', function ($row) {
-
                 return '
                     <a href="'.
                         route(
@@ -103,12 +92,7 @@ class EmployeeEarningController extends AdminController
                         View
                     </a>';
             })
-
-            ->rawColumns([
-                'status_badge',
-                'action'
-            ])
-
+            ->rawColumns(['code_name', 'status_badge', 'action'])
             ->make(true);
     }
 
