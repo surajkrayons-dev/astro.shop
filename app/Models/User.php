@@ -51,6 +51,8 @@ class User extends Authenticatable
 
         // ASTROLOGER DETAILS
         'about',
+        'birth_time',
+        'birth_place',
         'astro_education',
         'experience',
         'expertise',
@@ -72,6 +74,12 @@ class User extends Authenticatable
         // WORK / ADMIN
         'salary',
         'date_of_joining',
+        'commission_percentage',
+        'company_name',
+        'affiliate_type',
+        'traffic_sources',
+        'promotion_plan',
+        'expected_leads',
         'kyc_status',
         'created_by',
         'modified_by',
@@ -98,12 +106,12 @@ class User extends Authenticatable
         'last_seen_at' => 'datetime',
         'is_online' => 'boolean',
         'is_verified' => 'boolean',
-        'status' => 'boolean',
         'astro_education' => 'array',
         'expertise' => 'array',
         'category' => 'array',
         'languages' => 'array',
         'is_family_astrologer' => 'boolean',
+        'traffic_sources' => 'array',
     ];
 
     /* =====================================================

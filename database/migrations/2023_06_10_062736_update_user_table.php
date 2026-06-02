@@ -78,8 +78,14 @@ return new class extends Migration
             $table->decimal('commission_percentage', 5, 2)->default(0)->after('salary');
             $table->date('date_of_joining')->nullable()->after('commission_percentage');
 
+            $table->string('company_name')->nullable()->after('date_of_joining');
+            $table->enum('affiliate_type', ['blogger', 'influencer', 'agency', 'publisher', 'other'])->nullable()->after('company_name');
+            $table->json('traffic_sources')->nullable()->after('affiliate_type');
+            $table->text('promotion_plan')->nullable()->after('traffic_sources');
+            $table->enum('expected_leads', ['less_than_50', '50_100', '100_500', '500_plus'])->nullable()->after('promotion_plan');
+
             /* AUDIT */
-            $table->unsignedBigInteger('created_by')->nullable()->after('date_of_joining');
+            $table->unsignedBigInteger('created_by')->nullable()->after('expected_leads');
             $table->unsignedBigInteger('modified_by')->nullable()->after('created_by');
 
             $table->softDeletes();

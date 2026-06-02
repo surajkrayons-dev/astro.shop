@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\UserApiController;
 use App\Http\Controllers\Api\AstrologerApiController;
+use App\Http\Controllers\Api\EmployeeAffiliateApiController;
 use App\Http\Controllers\Api\ReviewApiController;
 use App\Http\Controllers\Api\HoroscopeApiController;
 use App\Http\Controllers\Api\BlogCategoryApiController;
@@ -61,6 +62,10 @@ Route::prefix('astro')->group(function () {
     Route::post('reset-password', [AstrologerApiController::class, 'resetPassword']);
 });
 
+// EMPLOYEE / AFFILIATE AUTH
+Route::prefix('affiliate')->group(function () {
+    Route::post('register', [EmployeeAffiliateApiController::class, 'register']);
+});
 
 Route::get('astro', [AstrologerApiController::class, 'list']);
 
