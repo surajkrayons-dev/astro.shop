@@ -90,16 +90,14 @@
 
                         <thead>
                             <tr>
-                                <th>Employee</th>
+                                <th>Username / Name</th>
                                 <th>Order No.</th>
                                 <th>Coupon</th>
                                 <th>Order Amount</th>
                                 <th>Commission %</th>
-                                <th>Commission Amount</th>
+                                <th>Commission ₹</th>
                                 <th>Status</th>
-                                <th width="100">
-                                    Action
-                                </th>
+                                <th >Action</th>
                             </tr>
                         </thead>
 
@@ -118,100 +116,73 @@
 @section('script')
     <script>
         $(function() {
-
             const table = $('#data-table').DataTable({
-
                 processing: true,
                 serverSide: true,
-
                 ajax: {
-
                     url: '{{ route('admin.employee_earnings.list') }}',
-
                     data: function(d) {
-
                         d.employee_id =
                             $('#employee_id').val();
-
                         d.status =
                             $('#status').val();
                     }
                 },
-
-                columns: [
-
-                    {
-                        data: 'employee',
-                        name: 'employee'
+                columns: [{
+                        data: 'code_name',
+                        name: 'code_name'
                     },
-
                     {
                         data: 'order_number',
                         name: 'order_number'
                     },
-
                     {
                         data: 'coupon_code',
                         name: 'coupon_code'
                     },
-
                     {
                         data: 'order_amount',
                         name: 'order_amount'
                     },
-
                     {
                         data: 'commission_percentage',
                         name: 'commission_percentage'
                     },
-
                     {
                         data: 'commission_amount',
                         name: 'commission_amount'
                     },
-
                     {
                         data: 'status_badge',
                         name: 'status',
                         orderable: false,
                         searchable: false
                     },
-
                     {
                         data: 'action',
                         orderable: false,
                         searchable: false
                     }
-
                 ]
-
             });
-
             $('#employee_id, #status').on(
                 'change',
                 function() {
-
                     table.ajax.reload();
-
                 }
             );
-
             $('#reset-filter-btn').on(
                 'click',
                 function() {
-
                     $('#employee_id')
                         .val('')
                         .trigger('change');
-
                     $('#status')
                         .val('')
                         .trigger('change');
-
                     table.ajax.reload();
                 }
             );
-
         });
     </script>
 @endsection

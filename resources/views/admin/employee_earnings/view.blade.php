@@ -40,20 +40,20 @@
                             <table class="table table-bordered">
 
                                 <tr>
-                                    <th width="220">
-                                        Employee
+                                    <th>
+                                        Employee Username
                                     </th>
                                     <td>
-                                        {{ $earning->employee?->name ?? '-' }}
+                                        [ <b>{{ $earning->employee?->username ?? '-' }}</b> ]
                                     </td>
                                 </tr>
 
                                 <tr>
-                                    <th>
-                                        Employee Code
+                                    <th width="220">
+                                        Employee Name
                                     </th>
                                     <td>
-                                        {{ $earning->employee?->code ?? '-' }}
+                                        {{ $earning->employee?->name ?? '-' }}
                                     </td>
                                 </tr>
 
@@ -103,7 +103,7 @@
 
                                 <tr>
                                     <th>
-                                        Commission Amount
+                                        Commission ₹
                                     </th>
                                     <td>
                                         ₹ {{ number_format($earning->commission_amount, 2) }}
