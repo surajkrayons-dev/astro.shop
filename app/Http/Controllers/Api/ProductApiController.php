@@ -20,20 +20,31 @@ class ProductApiController extends Controller
             : [];
 
         // SINGLE PRODUCT
-        if ($request->filled('product_id')) {
+        if ($request->filled('product_id') || $request->filled('slug')) {
 
-            $product = $query->find($request->product_id);
-
+            $product = $query
+                ->where(function ($q) use ($request) {
+        
+                    if ($request->filled('product_id')) {
+                        $q->where('id', $request->product_id);
+                    }
+        
+                    if ($request->filled('slug')) {
+                        $q->orWhere('slug', $request->slug);
+                    }
+                })
+                ->first();
+        
             if (!$product) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Product not found'
                 ], 404);
             }
-
+        
             return response()->json([
                 'status' => true,
-                'data'   => $this->fullProduct($product, $userWishlistIds)
+                'data' => $this->fullProduct($product, $userWishlistIds)
             ]);
         }
 

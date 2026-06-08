@@ -34,7 +34,7 @@ class EmployeeMiddleware
             $module = explode('.', $route)[1] ?? null;
 
             // 🔥 ALWAYS ALLOW THESE MODULES
-            $alwaysAllowed = ['dashboard', 'profile'];
+            $alwaysAllowed = ['dashboard', 'profile', 'employee_earnings', 'employee_withdraw_requests'];
 
             if (in_array($module, $alwaysAllowed)) {
                 return $next($request);

@@ -20,15 +20,21 @@ return new class extends Migration
             $table->unsignedBigInteger('coupon_id');
 
             $table->decimal('order_amount', 10, 2);
-
             $table->decimal('commission_percentage', 5, 2);
-
             $table->decimal('commission_amount', 10, 2);
 
-            $table->enum('status', [
-                'pending',
-                'paid'
-            ])->default('pending');
+            $table->enum(
+                'status',
+                ['delivery_pending', 'pending', 'paid', 'cancelled']
+            )->default('delivery_pending');
+
+            // Withdraw Flow
+            $table->boolean('is_withdraw_requested')->default(false);
+            $table->timestamp('withdraw_requested_at')->nullable();
+
+            // Payment Audit
+            $table->timestamp('paid_at')->nullable();
+            $table->unsignedBigInteger('paid_by')->nullable();
 
             $table->timestamps();
 
@@ -46,6 +52,16 @@ return new class extends Migration
                 ->references('id')
                 ->on('coupons')
                 ->cascadeOnDelete();
+
+            $table->foreign('paid_by')
+                ->references('id')
+                ->on('users')
+                ->nullOnDelete();
+
+            $table->index('employee_id');
+            $table->index('order_id');
+            $table->index('coupon_id');
+            $table->index('status');
         });
     }
 

@@ -10,7 +10,26 @@ class EmployeeEarningController extends AdminController
 {
     public function getIndex()
     {
-        return view('admin.employee_earnings.index');
+        $availableCommission = 0;
+
+        if (auth()->user()->type == 'employee') {
+            $availableCommission = \App\Models\EmployeeCommission::where(
+                'employee_id',
+                auth()->id()
+            )
+            ->where('status', 'pending')
+            ->where('is_withdraw_requested', 0)
+            ->whereHas('order', function ($q) {
+                $q->where(
+                    'delivered_at',
+                    '<=',
+                    now()->subDays(15)
+                );
+            })
+            ->sum('commission_amount');
+        }
+
+        return view('admin.employee_earnings.index', compact('availableCommission'));
     }
 
     public function getList(Request $request)
@@ -115,6 +134,26 @@ class EmployeeEarningController extends AdminController
         return view(
             'admin.employee_earnings.view',
             compact('earning')
+        );
+    }
+
+    public function markPaid($id)
+    {
+        $earning = EmployeeCommission::findOrFail($id);
+
+        if ($earning->status != 'pending') {
+            return back()->with('error', 'Invalid status');
+        }
+
+        $earning->update([
+            'status' => 'paid',
+            'paid_at' => now(),
+            'paid_by' => auth()->id(),
+        ]);
+
+        return back()->with(
+            'success',
+            'Commission marked as paid.'
         );
     }
 }
