@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Razorpay\Api\Api;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\EmployeeCommission;
 use App\Models\DeliveryRate;
 use App\Models\Payment;
 use App\Models\AlternativeAddress;
@@ -590,6 +591,29 @@ class StoreRazorpayPaymentController extends Controller
                 'paid_at' => now()
             ]);
 
+            if (
+                $couponId &&
+                $coupon &&
+                $coupon->employee_id &&
+                $coupon->employee_id != 1
+            ) {
+
+                $percentage = $coupon->employee->commission_percentage ?? 0;
+
+                $commissionAmount =
+                    ($order->total_amount * $percentage) / 100;
+
+                EmployeeCommission::create([
+                    'employee_id' => $coupon->employee_id,
+                    'order_id' => $order->id,
+                    'coupon_id' => $coupon->id,
+                    'order_amount' => $order->total_amount,
+                    'commission_percentage' => $percentage,
+                    'commission_amount' => round($commissionAmount, 2),
+                    'status' => 'delivery_pending',
+                ]);
+            }
+
             $invoiceNumber = 'AT-' . str_pad($order->id, 4, '0', STR_PAD_LEFT);
 
             $order->invoice_number = $invoiceNumber;
@@ -943,6 +967,14 @@ class StoreRazorpayPaymentController extends Controller
                 Payment::where('id', $order->payment_id)
                     ->update(['payment_status' => 'refunded']);
             }
+
+            // ðŸ”¥ COMMISSION UPDATE
+            EmployeeCommission::where(
+                'order_id',
+                $order->id
+            )->update([
+                'status' => 'cancelled'
+            ]);
 
             // ðŸ”¥ ORDER UPDATE
             $order->update([

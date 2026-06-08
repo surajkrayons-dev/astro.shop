@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 use App\Models\AlternativeAddress;
+use App\Models\EmployeeCommission;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Coupon;
@@ -330,6 +331,29 @@ class StoreCodOrderController extends Controller
                 'paid_at' => null,
             ]);
 
+            if (
+                $couponId &&
+                $coupon &&
+                $coupon->employee_id &&
+                $coupon->employee_id != 1
+            ) {
+
+                $percentage = $coupon->employee->commission_percentage ?? 0;
+
+                $commissionAmount =
+                    ($order->total_amount * $percentage) / 100;
+
+                EmployeeCommission::create([
+                    'employee_id' => $coupon->employee_id,
+                    'order_id' => $order->id,
+                    'coupon_id' => $coupon->id,
+                    'order_amount' => $order->total_amount,
+                    'commission_percentage' => $percentage,
+                    'commission_amount' => round($commissionAmount, 2),
+                    'status' => 'delivery_pending',
+                ]);
+            }
+
             $order->invoice_number = 'AT-COD-' . str_pad($order->id, 4, '0', STR_PAD_LEFT);
 
             $order->save();
@@ -511,6 +535,14 @@ class StoreCodOrderController extends Controller
                     throw new \Exception('Payment status update failed');
                 }
             }
+
+            // ðŸ”¥ COMMISSION UPDATE
+            EmployeeCommission::where(
+                'order_id',
+                $order->id
+            )->update([
+                'status' => 'cancelled'
+            ]);
     
             // ORDER STATUS UPDATE
             $order->update([

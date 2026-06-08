@@ -18,7 +18,17 @@ class EmployeeCommission extends Model
         'order_amount',
         'commission_percentage',
         'commission_amount',
-        'status'
+        'status',
+        'is_withdraw_requested',
+        'withdraw_requested_at',
+        'paid_at',
+        'paid_by',
+    ];
+
+    protected $casts = [
+        'is_withdraw_requested' => 'boolean',
+        'withdraw_requested_at' => 'datetime',
+        'paid_at' => 'datetime',
     ];
 
     public function employee()
@@ -34,5 +44,10 @@ class EmployeeCommission extends Model
     public function coupon()
     {
         return $this->belongsTo(Coupon::class);
+    }
+
+    public function paidBy()
+    {
+        return $this->belongsTo(User::class, 'paid_by');
     }
 }

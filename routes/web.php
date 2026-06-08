@@ -100,6 +100,18 @@ Route::namespace('App\Http\Controllers\Admin')
                         Route::get('/', 'EmployeeEarningController@getIndex')->name('index');
                         Route::get('list', 'EmployeeEarningController@getList')->name('list');
                         Route::get('view/{id?}', 'EmployeeEarningController@getView')->name('view');
+                        Route::post('mark_paid/{id}', 'EmployeeEarningController@markPaid')->name('mark.paid');
+                    });
+
+                Route::prefix('employee_withdraw_requests')
+                    ->name('employee_withdraw_requests.')
+                    ->group(function () {
+                        Route::post('request', 'EmployeeWithdrawRequestController@store')->name('request');
+                        Route::get('/', 'EmployeeWithdrawRequestController@getIndex')->name('index');
+                        Route::get('list', 'EmployeeWithdrawRequestController@getList')->name('list');
+                        Route::get('view/{id?}', 'EmployeeWithdrawRequestController@getView')->name('view');
+                        Route::post('approve/{id}', 'EmployeeWithdrawRequestController@approve')->name('approve');
+                        Route::post('reject/{id}', 'EmployeeWithdrawRequestController@reject')->name('reject');
                     });
 
                 Route::prefix('permissions')

@@ -71,36 +71,15 @@ class OrderDeliveryController extends AdminController
                 'delivered_at' => now()
             ]);
 
-            if (
-                $order->coupon &&
-                $order->coupon->employee_id &&
-                $order->coupon->employee_id != 1
-            ) {
-
-                $exists = EmployeeCommission::where(
-                    'order_id',
-                    $order->id
-                )->exists();
-
-                if (!$exists) {
-
-                    $percentage =
-                        $order->coupon->employee->commission_percentage ?? 0;
-
-                    $commissionAmount =
-                        ($order->total_amount * $percentage) / 100;
-
-                    EmployeeCommission::create([
-                        'employee_id'           => $order->coupon->employee_id,
-                        'order_id'              => $order->id,
-                        'coupon_id'             => $order->coupon_id,
-                        'order_amount'          => $order->total_amount,
-                        'commission_percentage' => $percentage,
-                        'commission_amount'     => round($commissionAmount, 2),
-                        'status'                => 'pending',
-                    ]);
-                }
-            }
+            EmployeeCommission::where(
+                'order_id',
+                $order->id
+            )->where(
+                'status',
+                'delivery_pending'
+            )->update([
+                'status' => 'pending'
+            ]);
 
             DB::commit();
 

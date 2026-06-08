@@ -75,6 +75,24 @@
                                     </td>
                                 </tr>
 
+                                <tr>
+                                    <th width="220">
+                                        Created At
+                                    </th>
+                                    <td>
+                                        {{ $earning->created_at->format('d M Y h:i A') }}
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th>
+                                        Updated At
+                                    </th>
+                                    <td>
+                                        {{ $earning->updated_at->format('d M Y h:i A') }}
+                                    </td>
+                                </tr>
+
                             </table>
 
                         </div>
@@ -115,60 +133,56 @@
                                         Status
                                     </th>
                                     <td>
-
-                                        @if ($earning->status == 'paid')
+                                        @if ($earning->status == 'delivery_pending')
+                                            <span class="badge bg-info">
+                                                Delivery Pending
+                                            </span>
+                                        @elseif($earning->status == 'pending')
+                                            <span class="badge bg-warning">
+                                                Commission Pending
+                                            </span>
+                                        @elseif($earning->status == 'paid')
                                             <span class="badge bg-success">
                                                 Paid
                                             </span>
-                                        @else
-                                            <span class="badge bg-warning">
-                                                Pending
+                                        @elseif($earning->status == 'cancelled')
+                                            <span class="badge bg-danger">
+                                                Cancelled
                                             </span>
                                         @endif
-
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Paid At</th>
+                                    <td>
+                                        {{ $earning->paid_at ? $earning->paid_at->format('d M Y h:i A') : '-' }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Paid By</th>
+                                    <td>
+                                        {{ $earning->paidBy?->name ?? '-' }}
                                     </td>
                                 </tr>
 
-                            </table>
-
-                        </div>
-
-                    </div>
-
-                    <div class="row mt-3">
-
-                        <div class="col-md-12">
-
-                            <table class="table table-bordered">
-
-                                <tr>
-                                    <th width="220">
+                                {{-- <tr>
+                                    <th>
                                         Created At
                                     </th>
                                     <td>
                                         {{ $earning->created_at->format('d M Y h:i A') }}
                                     </td>
-                                </tr>
-
-                                <tr>
-                                    <th>
-                                        Updated At
-                                    </th>
-                                    <td>
-                                        {{ $earning->updated_at->format('d M Y h:i A') }}
-                                    </td>
-                                </tr>
-
+                                </tr> --}}
                             </table>
+
 
                         </div>
 
+
                     </div>
-
-                    <a href="{{ route('admin.employee_earnings.index') }}" class="btn btn-secondary">
-
+                    <a href="{{ route('admin.employee_earnings.index') }}"
+                        class="btn btn-secondary justify-content-end mb-3">
                         Back
-
                     </a>
 
                 </div>

@@ -102,6 +102,13 @@ $user = auth()->user();
                 </li>
 
                 <li>
+                    <a href="{{ route('admin.employee_withdraw_requests.index') }}">
+                        <i class="bx bx-money"></i>
+                        <span>Withdraw Requests</span>
+                    </a>
+                </li>
+
+                <li>
                     <a href="{{ route('admin.returns.index') }}">
                         <i class="bx bx-undo"></i>
                         <span>Returns</span>
