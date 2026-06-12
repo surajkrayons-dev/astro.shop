@@ -41,16 +41,33 @@
                     ₹ {{ number_format($order->total_amount ?? 0, 2) }}
                 </div>
 
+                @if ($order->pdf)
+                    <div class="mt-3 d-flex gap-2 justify-content-end">
+
+                        <a href="{{ asset('storage/' . $order->pdf) }}" target="_blank" class="btn btn-danger btn-sm">
+
+                            <i class="fas fa-file-pdf"></i>
+                            View PDF
+
+                        </a>
+
+                        <a href="{{ asset('storage/' . $order->pdf) }}" download class="btn btn-success btn-sm">
+
+                            <i class="fas fa-download"></i>
+                            Download PDF
+
+                        </a>
+
+                    </div>
+                @endif
+
             </div>
 
         </div>
 
     </div>
 
-    <button
-        type="button"
-        class="btn-close ms-3"
-        data-bs-dismiss="modal">
+    <button type="button" class="btn-close ms-3" data-bs-dismiss="modal">
     </button>
 
 </div>
@@ -141,13 +158,7 @@
                         <span>Categories</span>
 
                         <strong>
-                            {{
-                                $order->items
-                                ->pluck('product.category.name')
-                                ->filter()
-                                ->unique()
-                                ->count()
-                            }}
+                            {{ $order->items->pluck('product.category.name')->filter()->unique()->count() }}
                         </strong>
                     </div>
 
@@ -237,8 +248,7 @@
                         Payment
                     </h6>
 
-                    @if($order->payment)
-
+                    @if ($order->payment)
                         <div class="mb-3">
                             <small class="text-muted d-block">
                                 Transaction ID
@@ -276,13 +286,10 @@
                         <span class="badge bg-success">
                             {{ strtoupper($order->payment->payment_status ?? 'success') }}
                         </span>
-
                     @else
-
                         <div class="text-muted">
                             No payment found
                         </div>
-
                     @endif
 
                 </div>
@@ -480,7 +487,6 @@
                     <tbody>
 
                         @foreach ($order->items as $item)
-
                             @php
                                 $product = $item->product;
 
@@ -496,16 +502,10 @@
                                 {{-- IMAGE --}}
                                 <td>
 
-                                    @if($item->product_image)
-
-                                        <img
-                                            src="{{ asset('storage/product/' . $item->product_image) }}"
-                                            width="55"
-                                            height="55"
-                                            class="rounded border"
-                                            style="object-fit:cover;"
-                                        >
-
+                                    @if ($item->product_image)
+                                        <img src="{{ asset('storage/product/' . $item->product_image) }}"
+                                            width="55" height="55" class="rounded border"
+                                            style="object-fit:cover;">
                                     @endif
 
                                 </td>
@@ -541,18 +541,14 @@
                                 {{-- STOCK --}}
                                 <td>
 
-                                    @if($product)
-
+                                    @if ($product)
                                         <span class="badge bg-{{ $product->stock_qty > 0 ? 'success' : 'danger' }}">
 
                                             {{ $product->stock_qty }}
 
                                         </span>
-
                                     @else
-
                                         N/A
-
                                     @endif
 
                                 </td>
@@ -608,33 +604,26 @@
                                 <td>
 
                                     @if ($review)
-
                                         <span class="badge bg-warning text-dark">
                                             ⭐ {{ $review->rating }}/5
                                         </span>
 
                                         @if ($review->review)
-
                                             <div class="small text-muted mt-1">
 
                                                 "{{ $review->review }}"
 
                                             </div>
-
                                         @endif
-
                                     @else
-
                                         <span class="text-muted small">
                                             No review
                                         </span>
-
                                     @endif
 
                                 </td>
 
                             </tr>
-
                         @endforeach
 
                     </tbody>
@@ -648,7 +637,7 @@
     </div>
 
     {{-- TIMELINE --}}
-    <div class="card border-0 shadow-sm mt-4">
+    {{-- <div class="card border-0 shadow-sm mt-4">
 
         <div class="card-body">
 
@@ -726,15 +715,13 @@
 
         </div>
 
-    </div>
+    </div> --}}
 
 </div>
 
 <div class="modal-footer border-0">
 
-    <button
-        class="btn btn-secondary"
-        data-bs-dismiss="modal">
+    <button class="btn btn-secondary" data-bs-dismiss="modal">
 
         Close
 

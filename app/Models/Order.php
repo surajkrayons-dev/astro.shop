@@ -36,6 +36,7 @@ class Order extends Model
         'shipping_status',
         'invoice_sequence',
         'invoice_number',
+        'pdf',
         'coupon_id',
         'payment_id',
         'order_number',

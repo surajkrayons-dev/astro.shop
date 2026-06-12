@@ -310,14 +310,6 @@ Route::namespace('App\Http\Controllers\Admin')
                         Route::get('download/invoice/{id?}', 'OrderController@getDownloadInvoice')->name('download.invoice');
                         Route::get('tracking/history/{id}', 'OrderController@getTrackingHistory')->name('tracking.history');
                         Route::get('tracking/history/list/{id}', 'OrderController@getTrackingHistoryList')->name('tracking.history.list');
-
-                        Route::prefix('report')
-                            ->name('report.')
-                            ->group(function () {
-                                Route::get('/', 'OrderController@getReportIndex')->name('index');
-                                Route::post('list', 'OrderController@getReportList')->name('list');
-                                Route::get('stats', 'OrderController@getReportStats')->name('stats');
-                            });
                     });
 
                 Route::prefix('settings')
