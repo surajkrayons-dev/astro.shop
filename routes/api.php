@@ -205,6 +205,7 @@ Route::middleware(['auth:sanctum', 'session.timeout'])->group(function () {
             Route::post('order/place', [OrderApiController::class, 'place']);
             Route::get('orders', [OrderApiController::class, 'index']);
             Route::get('orders/{id}', [OrderApiController::class, 'show']);
+            Route::post('orders/upload-pdf', [OrderApiController::class, 'uploadPdf']);
 
             /*
             |--------------------------------------------------------------------------

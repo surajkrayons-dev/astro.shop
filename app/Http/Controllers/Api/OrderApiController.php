@@ -360,4 +360,45 @@ class OrderApiController extends Controller
             ],
         ];
     }
+
+    public function uploadPdf(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|exists:orders,id',
+            'pdf' => 'required|string',
+        ]);
+
+        $order = Order::findOrFail($request->order_id);
+
+        $base64Pdf = $request->pdf;
+
+        if (str_contains($base64Pdf, ',')) {
+            $base64Pdf = explode(',', $base64Pdf)[1];
+        }
+
+        $pdfContent = base64_decode($base64Pdf);
+
+        if (!$pdfContent) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid PDF data'
+            ], 422);
+        }
+
+        $fileName = 'invoice_' . $order->id . '.pdf';
+
+        $filePath = 'invoices/' . $fileName;
+
+        \Storage::disk('public')->put($filePath, $pdfContent);
+
+        $order->update([
+            'pdf' => $filePath
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'PDF uploaded successfully',
+            'pdf' => asset('storage/' . $filePath)
+        ]);
+    }
 }

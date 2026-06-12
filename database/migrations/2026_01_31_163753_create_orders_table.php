@@ -35,6 +35,7 @@ return new class extends Migration
 
             $table->unsignedBigInteger('invoice_sequence')->nullable()->unique();
             $table->string('invoice_number')->nullable()->unique();
+            $table->string('pdf')->nullable();
             $table->string('order_number')->unique();
             $table->string('hsn_code')->nullable();
 
