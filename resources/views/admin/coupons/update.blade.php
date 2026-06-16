@@ -15,13 +15,14 @@
                 <div class="col-lg-6">
                     <div class="form-group">
                         <label class="form-label">
-                            Employee <sup class="text-danger fs-5">*</sup> :
+                            Employee :
                         </label>
                         <select class="form-control select2-update" name="employee_id" id="update_employee_id"
                             data-placeholder="Select Employee">
                             <option value=""></option>
                             @foreach (\App\Models\User::where('type', 'employee')->orderBy('name')->get() as $employee)
-                                <option value="{{ $employee->id }}" {{ $coupon->employee_id == $employee->id ? 'selected' : '' }}>
+                                <option value="{{ $employee->id }}"
+                                    {{ $coupon->employee_id == $employee->id ? 'selected' : '' }}>
                                     {{ $employee->name }}
                                 </option>
                             @endforeach
@@ -77,7 +78,7 @@
                 <div class="col-lg-6">
                     <div class="form-group">
                         <label class="form-label">
-                            Minimum Order Amount
+                            Minimum Order Amount :
                         </label>
                         <input type="number" step="0.01" name="min_amount" class="form-control"
                             value="{{ $coupon->min_amount }}" placeholder="e.g. 1000">
@@ -90,7 +91,7 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            Maximum Discount Cap
+                            Maximum Discount Cap <sup class="text-danger fs-5">*</sup> :
                         </label>
                         <input type="number" step="0.01" name="max_discount" class="form-control"
                             value="{{ $coupon->max_discount }}" placeholder="e.g. 500 (Only for percentage)">
@@ -105,7 +106,7 @@
                 <div class="col-lg-6">
                     <div class="form-group">
                         <label class="form-label">
-                            Expiry Date <sup class="text-danger">*</sup>
+                            Expiry Date <sup class="text-danger fs-5">*</sup> :
                         </label>
                         <input type="date" name="expiry_date" class="form-control"
                             value="{{ $coupon->expiry_date }}">
@@ -115,7 +116,7 @@
                 {{-- Status --}}
                 <div class="col-lg-2 p-0 mt-3 ms-2">
                     <div class="form-group d-flex justify-content-between align-items-center">
-                        <label class="form-label fw-bold">Status</label>
+                        <label class="form-label fw-bold">Status :</label>
 
                         <input type="hidden" name="status" value="0">
 
@@ -131,7 +132,7 @@
                 {{-- Visible On Frontend --}}
                 <div class="col-lg-4 mt-3">
                     <div class="form-group d-flex justify-content-between align-items-center">
-                        <label class="form-label fw-bold">Visible On Frontend</label>
+                        <label class="form-label fw-bold">Visible On Frontend :</label>
 
                         <input type="hidden" name="is_visible" value="0">
 
