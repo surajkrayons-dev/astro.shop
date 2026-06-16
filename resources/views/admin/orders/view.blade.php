@@ -19,15 +19,53 @@
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
 
             <div>
+                <div class="d-flex align-items-center gap-3 flex-wrap">
 
-                <h4 class="fw-bold mb-1">
-                    Order #{{ $order->order_number }}
-                </h4>
+                    <h4 class="fw-bold mb-0">
+                        Order #{{ $order->order_number }}
+                    </h4>
 
-                <div class="text-muted small">
-                    Placed on
-                    {{ optional($order->created_at)->format('d M Y h:i A') }}
+                    <form method="POST" action="{{ route('admin.orders.send-mail', $order->id) }}"
+                        class="d-flex align-items-center gap-2">
+
+                        @csrf
+
+                        <input type="text" name="awb_code" class="form-control form-control-sm" style="width:250px;"
+                            value="{{ $order->awb_code }}" placeholder="Enter AWB Code" required>
+
+                        <button type="submit" class="btn btn-primary btn-sm">
+
+                            Send Mail
+
+                        </button>
+
+                    </form>
+
                 </div>
+
+                <div class="text-muted small mt-2">
+                    Placed on {{ optional($order->created_at)->format('d M Y h:i A') }}
+                </div>
+
+                @if ($order->pdf)
+                    <div class="mt-3 d-flex gap-2">
+
+                        <a href="{{ asset('storage/' . $order->pdf) }}" target="_blank" class="btn btn-danger">
+
+                            <i class="fas fa-file-pdf"></i>
+                            View PDF
+
+                        </a>
+
+                        <a href="{{ asset('storage/' . $order->pdf) }}" download class="btn btn-success">
+
+                            <i class="fas fa-download"></i>
+                            Download PDF
+
+                        </a>
+
+                    </div>
+                @endif
 
             </div>
 
@@ -40,26 +78,6 @@
                 <div class="fw-bold text-success fs-4 mt-2">
                     ₹ {{ number_format($order->total_amount ?? 0, 2) }}
                 </div>
-
-                @if ($order->pdf)
-                    <div class="mt-3 d-flex gap-2 justify-content-end">
-
-                        <a href="{{ asset('storage/' . $order->pdf) }}" target="_blank" class="btn btn-danger btn-sm">
-
-                            <i class="fas fa-file-pdf"></i>
-                            View PDF
-
-                        </a>
-
-                        <a href="{{ asset('storage/' . $order->pdf) }}" download class="btn btn-success btn-sm">
-
-                            <i class="fas fa-download"></i>
-                            Download PDF
-
-                        </a>
-
-                    </div>
-                @endif
 
             </div>
 
