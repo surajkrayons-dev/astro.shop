@@ -12,7 +12,7 @@
 
                 <div class="col-lg-6">
                     <div class="form-group">
-                        <label class="form-label"><Em>Employee</Em> <sup class="text-danger fs-5">*</sup> :</label>
+                        <label class="form-label">Employee :</label>
                         <select class="form-control select2-class2" name="employee_id" id="modal_employee_id"
                             data-placeholder="Select Employee">
                             <option value=""></option>
@@ -54,7 +54,7 @@
 
                 <div class="col-lg-6">
                     <div class="form-group">
-                        <label class="form-label">Minimum Order Amount</label>
+                        <label class="form-label">Minimum Order Amount :</label>
                         <input type="number" step="0.01" name="min_amount" class="form-control"
                             placeholder="e.g. 1000">
                     </div>
@@ -62,7 +62,7 @@
 
                 <div class="col-lg-6 d-none" id="max-discount-wrapper">
                     <div class="form-group">
-                        <label class="form-label">Maximum Discount Cap</label>
+                        <label class="form-label">Maximum Discount Cap <sup class="text-danger fs-5">*</sup> :</label>
                         <input type="number" step="0.01" name="max_discount" class="form-control"
                             placeholder="e.g. 500 (Only for percentage)">
                         <small class="text-muted">Applicable only for percentage coupons</small>
@@ -71,14 +71,14 @@
 
                 <div class="col-lg-6">
                     <div class="form-group">
-                        <label class="form-label">Expiry Date <sup class="text-danger">*</sup></label>
+                        <label class="form-label">Expiry Date <sup class="text-danger fs-5">*</sup> :</label>
                         <input type="date" name="expiry_date" class="form-control">
                     </div>
                 </div>
 
                 <div class="col-lg-2 p-0 mt-3 ms-2">
                     <div class="form-group d-flex justify-content-between align-items-center">
-                        <label class="form-label fw-bold">Status</label>
+                        <label class="form-label fw-bold">Status :</label>
                         <input type="hidden" name="status" value="0">
 
                         <div class="square-switch">
@@ -91,7 +91,7 @@
 
                 <div class="col-lg-4 mt-3">
                     <div class="form-group d-flex justify-content-between align-items-center">
-                        <label class="form-label fw-bold">Visible On Frontend</label>
+                        <label class="form-label fw-bold">Visible On Frontend :</label>
 
                         <input type="hidden" name="is_visible" value="0">
 
