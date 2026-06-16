@@ -16,6 +16,8 @@ use DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use App\Mail\OrderDeliveryTrackMail;
+use Illuminate\Support\Facades\Mail;
 
 class OrderController extends Controller
 {
@@ -90,7 +92,6 @@ class OrderController extends Controller
             ->make(true);
     }
 
-
     public function getView(Request $request, $id)
     {
         $order = Order::with([
@@ -120,5 +121,26 @@ class OrderController extends Controller
         }
 
         return view('admin.orders.view', compact('order'));
+    }
+
+    public function sendMail(Request $request, $id)
+    {
+        $request->validate([
+            'awb_code' => 'required|min:5'
+        ]);
+
+        $order = Order::with('user')->findOrFail($id);
+
+        $order->update([
+            'awb_code' => trim($request->awb_code)
+        ]);
+
+        Mail::to($order->user->email)
+            ->send(new OrderDeliveryTrackMail($order));
+
+        return back()->with(
+            'success',
+            'Tracking mail sent successfully.'
+        );
     }
 }

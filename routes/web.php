@@ -307,9 +307,7 @@ Route::namespace('App\Http\Controllers\Admin')
                         Route::post('create', 'OrderController@postCreate')->name('create');
                         Route::post('update/{id?}', 'OrderController@postUpdate')->name('update');
                         Route::get('view/{id?}', 'OrderController@getView')->name('view');
-                        Route::get('download/invoice/{id?}', 'OrderController@getDownloadInvoice')->name('download.invoice');
-                        Route::get('tracking/history/{id}', 'OrderController@getTrackingHistory')->name('tracking.history');
-                        Route::get('tracking/history/list/{id}', 'OrderController@getTrackingHistoryList')->name('tracking.history.list');
+                        Route::post('{id}/send-mail', 'OrderController@sendMail')->name('send-mail');
                     });
 
                 Route::prefix('settings')
