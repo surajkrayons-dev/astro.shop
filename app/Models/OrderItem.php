@@ -24,7 +24,15 @@ class OrderItem extends Model
         'weight',
         'length',
         'breadth',
-        'height'   
+        'height',
+        'gst_rate',
+        'gst_amount',
+        'taxable_amount',
+        'cgst_amount',
+        'sgst_amount',
+        'igst_amount',
+        'tax_type',
+        'hsn_code',
     ];
 
     protected $casts = [
@@ -38,6 +46,12 @@ class OrderItem extends Model
         'length' => 'float',
         'breadth' => 'float',
         'height' => 'float',
+        'gst_rate' => 'float',
+        'gst_amount' => 'float',
+        'taxable_amount' => 'float',
+        'cgst_amount' => 'float',
+        'sgst_amount' => 'float',
+        'igst_amount' => 'float',
     ];
 
     public function order()

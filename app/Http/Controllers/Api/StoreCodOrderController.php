@@ -718,6 +718,31 @@ class StoreCodOrderController extends Controller
                 $maxLength = max($maxLength, $product->length ?? 0);
                 $maxBreadth = max($maxBreadth, $product->breadth ?? 0);
                 $totalHeight += (($product->height ?? 0) * $item->quantity);
+                $itemGstRate = $product->gst_rate ?? 0;
+
+                $itemTax = round(
+                    ($item->total_price * $itemGstRate) / 100,
+                    2
+                );
+
+                $itemTaxableAmount = round(
+                    $item->total_price - $itemTax,
+                    2
+                );
+
+                $itemCgst = 0;
+                $itemSgst = 0;
+                $itemIgst = 0;
+
+                if ($taxType == 'cgst_sgst') {
+
+                    $itemCgst = round($itemTax / 2, 2);
+                    $itemSgst = round($itemTax / 2, 2);
+
+                } else {
+
+                    $itemIgst = $itemTax;
+                }
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item->product_id,
@@ -732,6 +757,14 @@ class StoreCodOrderController extends Controller
                     'length' => $product->length,
                     'breadth' => $product->breadth,
                     'height' => $product->height,
+                    'gst_rate' => $itemGstRate,
+                    'gst_amount' => $itemTax,
+                    'taxable_amount' => $itemTaxableAmount,
+                    'cgst_amount' => $itemCgst,
+                    'sgst_amount' => $itemSgst,
+                    'igst_amount' => $itemIgst,
+                    'tax_type' => $taxType,
+                    'hsn_code' => $product->hsn_code,
                 ]);
             }
 

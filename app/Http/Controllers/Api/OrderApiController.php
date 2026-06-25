@@ -214,21 +214,33 @@ class OrderApiController extends Controller
 
             // 💰 PRICING
             'pricing' => [
+
+                // PRODUCT
                 'subtotal' => $order->subtotal,
                 'discount' => $order->discount,
 
-                'taxable_amount' => $order->taxable_amount,
-                'gst_rate' => $order->gst_rate,
-                'tax_type' => $order->tax_type,
-                'cgst_amount' => $order->cgst_amount,
-                'sgst_amount' => $order->sgst_amount,
-                'igst_amount' => $order->igst_amount,
+                'product_taxable_amount' =>
+                    $order->price_breakdown['product_taxable_amount'] ?? 0,
 
+                'gst_rate' => $order->gst_rate,
+
+                'product_gst_amount' =>
+                    $order->price_breakdown['product_gst_amount'] ?? 0,
+
+                'product_cgst_amount' =>
+                    $order->price_breakdown['product_cgst_amount'] ?? 0,
+
+                'product_sgst_amount' =>
+                    $order->price_breakdown['product_sgst_amount'] ?? 0,
+
+                'product_igst_amount' =>
+                    $order->price_breakdown['product_igst_amount'] ?? 0,
+
+                // SHIPPING
                 'delivery_charge' => $order->delivery_charge,
 
-                'cod_charge' => (float) (
-                    $order->price_breakdown['cod_charge'] ?? 0
-                ),
+                'shipping_taxable_amount' =>
+                    $order->price_breakdown['shipping_taxable_amount'] ?? 0,
 
                 'shipping_gst_rate' =>
                     $order->price_breakdown['shipping_gst_rate'] ?? 18,
@@ -236,22 +248,54 @@ class OrderApiController extends Controller
                 'shipping_gst_amount' =>
                     $order->price_breakdown['shipping_gst_amount'] ?? 0,
 
+                'shipping_cgst_amount' =>
+                    $order->price_breakdown['shipping_cgst_amount'] ?? 0,
+
+                'shipping_sgst_amount' =>
+                    $order->price_breakdown['shipping_sgst_amount'] ?? 0,
+
+                'shipping_igst_amount' =>
+                    $order->price_breakdown['shipping_igst_amount'] ?? 0,
+
+                // COD
+                'cod_charge' => (float) (
+                    $order->price_breakdown['cod_charge'] ?? 0
+                ),
+
+                'cod_taxable_amount' =>
+                    $order->price_breakdown['cod_taxable_amount'] ?? 0,
+
                 'cod_gst_rate' =>
                     $order->price_breakdown['cod_gst_rate'] ?? 18,
 
                 'cod_gst_amount' =>
                     $order->price_breakdown['cod_gst_amount'] ?? 0,
 
+                'cod_cgst_amount' =>
+                    $order->price_breakdown['cod_cgst_amount'] ?? 0,
+
+                'cod_sgst_amount' =>
+                    $order->price_breakdown['cod_sgst_amount'] ?? 0,
+
+                'cod_igst_amount' =>
+                    $order->price_breakdown['cod_igst_amount'] ?? 0,
+
+                // ORDER SUMMARY
+                'taxable_amount' => $order->taxable_amount,
+                'tax_type' => $order->tax_type,
+
+                'cgst_amount' => $order->cgst_amount,
+                'sgst_amount' => $order->sgst_amount,
+                'igst_amount' => $order->igst_amount,
+
+                // PAYMENT
                 'wallet_used' => $order->wallet_used,
-
                 'paid_amount' => $order->paid_amount,
-
                 'advance_paid_amount' => $order->advance_paid_amount,
-
                 'remaining_cod_amount' => $order->remaining_cod_amount,
-
                 'is_cod_advance' => (bool) $order->is_cod_advance,
 
+                // FINAL
                 'total_amount' => $order->total_amount,
             ],
 
@@ -351,8 +395,14 @@ class OrderApiController extends Controller
                     'quantity' => $item->quantity,
                     'price' => $item->price,
                     'total' => $item->total,
-                    'gst_rate' => $product->gst_rate ?? 0,
-                    'hsn_code' => $product->hsn_code ?? null,
+                    'hsn_code' => $item->hsn_code,
+                    'gst_rate' => $item->gst_rate,
+                    'gst_amount' => $item->gst_amount,
+                    'taxable_amount' => $item->taxable_amount,
+                    'cgst_amount' => $item->cgst_amount,
+                    'sgst_amount' => $item->sgst_amount,
+                    'igst_amount' => $item->igst_amount,
+                    'tax_type' => $item->tax_type,
 
                     // 📦 ITEM DIMENSIONS
                     'weight' => $item->weight,

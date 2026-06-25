@@ -723,12 +723,38 @@ class StoreRazorpayPaymentController extends Controller
                 foreach ($items as $item) {
 
                     $product = $products[$item->product_id] ?? null;
-
+                    if (!$product) {
+                        throw new \Exception('Product not found');
+                    }
                     $totalWeight += (($product->weight ?? 0) * $item->quantity);
-
                     $maxLength = max($maxLength, $product->length ?? 0);
                     $maxBreadth = max($maxBreadth, $product->breadth ?? 0);
                     $totalHeight += (($product->height ?? 0) * $item->quantity);
+                    $itemGstRate = $product->gst_rate ?? 0;
+
+                    $itemTax = round(
+                        ($item->total_price * $itemGstRate) / 100,
+                        2
+                    );
+
+                    $itemTaxableAmount = round(
+                        $item->total_price - $itemTax,
+                        2
+                    );
+
+                    $itemCgst = 0;
+                    $itemSgst = 0;
+                    $itemIgst = 0;
+
+                    if ($taxType == 'cgst_sgst') {
+
+                        $itemCgst = round($itemTax / 2, 2);
+                        $itemSgst = round($itemTax / 2, 2);
+
+                    } else {
+
+                        $itemIgst = $itemTax;
+                    }
 
                     OrderItem::create([
                         'order_id' => $order->id,
@@ -744,6 +770,14 @@ class StoreRazorpayPaymentController extends Controller
                         'length' => $product->length,
                         'breadth' => $product->breadth,
                         'height' => $product->height,
+                        'gst_rate' => $itemGstRate,
+                        'gst_amount' => $itemTax,
+                        'taxable_amount' => $itemTaxableAmount,
+                        'cgst_amount' => $itemCgst,
+                        'sgst_amount' => $itemSgst,
+                        'igst_amount' => $itemIgst,
+                        'tax_type' => $taxType,
+                        'hsn_code' => $product->hsn_code,
                     ]);
                 }
 
@@ -808,13 +842,19 @@ class StoreRazorpayPaymentController extends Controller
                     'items' => $order->items->map(function ($item) {
                         return [
                             'product_id' => $item->product_id,
-                            'gst_rate' => $item->product->gst_rate ?? 0,
-                            'hsn_code' => $item->product->hsn_code ?? null,
                             'name' => $item->product_name,
                             'image' => $item->product_image,
                             'quantity' => $item->quantity,
                             'price' => $item->price,
                             'total' => $item->total,
+                            'hsn_code' => $item->hsn_code,
+                            'gst_rate' => $item->gst_rate,
+                            'gst_amount' => $item->gst_amount,
+                            'taxable_amount' => $item->taxable_amount,
+                            'cgst_amount' => $item->cgst_amount,
+                            'sgst_amount' => $item->sgst_amount,
+                            'igst_amount' => $item->igst_amount,
+                            'tax_type' => $item->tax_type,
                         ];
                     }),
                 ]

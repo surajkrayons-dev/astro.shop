@@ -32,6 +32,14 @@ return new class extends Migration
             $table->decimal('length', 8, 2)->nullable();
             $table->decimal('breadth', 8, 2)->nullable();
             $table->decimal('height', 8, 2)->nullable();
+            $table->decimal('gst_rate', 5, 2)->default(0);
+            $table->decimal('gst_amount', 10, 2)->default(0);
+            $table->decimal('taxable_amount', 10, 2)->default(0);
+            $table->decimal('cgst_amount', 10, 2)->default(0);
+            $table->decimal('sgst_amount', 10, 2)->default(0);
+            $table->decimal('igst_amount', 10, 2)->default(0);
+            $table->string('tax_type')->nullable();
+            $table->string('hsn_code')->nullable();
 
             $table->timestamps();
 
