@@ -71,6 +71,18 @@
 
                 <div class="col-lg-6">
                     <div class="form-group">
+                        <label class="form-label">Payment Type <sup class="text-danger fs-5">*</sup> :</label>
+                        <select class="form-control select2-class2" name="payment_type" id="modal_payment_type" data-placeholder="Select Type">
+                            <option value=""></option>
+                            <option value="prepaid">Prepaid</option>
+                            <option value="cod">Cash on Delivery</option>
+                            <option value="both">Both</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="form-group">
                         <label class="form-label">Expiry Date <sup class="text-danger fs-5">*</sup> :</label>
                         <input type="date" name="expiry_date" class="form-control">
                     </div>
