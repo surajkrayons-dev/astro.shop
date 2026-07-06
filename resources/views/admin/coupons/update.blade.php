@@ -102,6 +102,17 @@
                     </div>
                 </div>
 
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label class="form-label">Payment Type <sup class="text-danger fs-5">*</sup> :</label>
+                        <select class="form-control select2-update" name="payment_type" id="modal_payment_type" data-placeholder="Select Type">
+                            <option value="both" {{ $coupon->payment_type == 'both' ? 'selected' : '' }}>Both</option>
+                            <option value="prepaid" {{ $coupon->payment_type == 'prepaid' ? 'selected' : '' }}>Prepaid</option>
+                            <option value="cod" {{ $coupon->payment_type == 'cod' ? 'selected' : '' }}>Cash on Delivery</option>
+                        </select>
+                    </div>
+                </div>
+
                 {{-- Expiry Date --}}
                 <div class="col-lg-6">
                     <div class="form-group">

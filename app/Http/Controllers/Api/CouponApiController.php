@@ -72,6 +72,7 @@ class CouponApiController extends Controller
             'discount_value' => $c->discount_value,
             'min_amount' => $c->min_amount,
             'max_discount' => $c->max_discount,
+            'payment_type' => $c->payment_type,
             'expiry_date' => $c->expiry_date,
 
             'is_valid' => now()->lte($c->expiry_date),

@@ -17,8 +17,9 @@ return new class extends Migration
             $table->string('code')->unique();
             $table->enum('discount_type', ['flat','percentage']);
             $table->decimal('discount_value', 10, 2);
-            $table->decimal('min_amount', 10, 2)->nullable(); // minimum cart/order amount
-            $table->decimal('max_discount', 10, 2)->nullable(); // max discount cap
+            $table->decimal('min_amount', 10, 2)->nullable();
+            $table->decimal('max_discount', 10, 2)->nullable();
+            $table->enum('payment_type', ['prepaid', 'cod', 'both'])->default('both');
             $table->date('expiry_date');
             $table->boolean('status')->default(1);
             $table->boolean('is_visible')->default(1);

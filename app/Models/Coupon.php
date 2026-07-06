@@ -18,6 +18,7 @@ class Coupon extends Model
         'discount_value',
         'min_amount',
         'max_discount',
+        'payment_type',
         'expiry_date',
         'status',
         'is_visible',
