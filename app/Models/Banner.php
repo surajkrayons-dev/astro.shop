@@ -14,12 +14,15 @@ class Banner extends Model
     protected $fillable = [
         'type',
         'media',
+        'url',
+        'display_duration',
         'status',
         'sort_order'
     ];
 
     protected $casts = [
         'media' => 'array',
+        'display_duration' => 'integer',
         'status' => 'boolean',
         'sort_order' => 'integer',
     ];

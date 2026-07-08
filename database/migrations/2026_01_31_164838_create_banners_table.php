@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('type');
             $table->json('media')->nullable();
+            $table->string('url')->nullable();
+            $table->unsignedInteger('display_duration')->default(3);
             $table->tinyInteger('status')->default(1);
             $table->integer('sort_order')->default(0);
             $table->timestamps();

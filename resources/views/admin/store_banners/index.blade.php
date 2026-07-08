@@ -58,6 +58,7 @@
                             <tr>
                                 <th>Preview</th>
                                 <th>Sort Order</th>
+                                <th>Display Duration (seconds)</th>
                                 <th>Status</th>
                                 <th class="text-center">Action</th>
                             </tr>
@@ -93,6 +94,10 @@
                     {
                         data: 'sort_order',
                         name: 'sort_order'
+                    },
+                    {
+                        data: 'display_duration',
+                        name: 'display_duration'
                     },
                     {
                         data: null,

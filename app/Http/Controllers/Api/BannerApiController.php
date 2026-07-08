@@ -21,12 +21,14 @@ class BannerApiController extends Controller
             ->map(function ($banner) {
 
                 return [
-                    'id' => $banner->id,
-                    'media_type' => $banner->media['type'] ?? null,
-                    'media_url' => isset($banner->media['path'])
+                    'id'               => $banner->id,
+                    'media_type'       => $banner->media['type'] ?? null,
+                    'media_url'        => isset($banner->media['path'])
                         ? asset('storage/' . $banner->media['path'])
                         : null,
-                    'sort_order' => $banner->sort_order,
+                    'url'              => $banner->url,
+                    'display_duration' => $banner->display_duration,
+                    'sort_order'       => $banner->sort_order,
                 ];
             });
 
