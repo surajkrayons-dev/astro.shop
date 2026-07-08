@@ -69,7 +69,18 @@
                                 {{-- New Preview --}}
                                 <div id="newPreview" class="mt-3"></div>
 
+                                <div class="mt-4">
+                                    <label class="form-label fw-bold">
+                                        Banner URL
+                                    </label>
 
+                                    <input type="url" name="url" class="form-control"
+                                        value="{{ old('url', $banner->url) }}" placeholder="https://example.com">
+
+                                    <small class="text-muted">
+                                        Optional. Redirect URL for the banner.
+                                    </small>
+                                </div>
 
                             </div>
                         </div>
@@ -98,19 +109,26 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title mb-0">Sort Order</h4>
-                            </div>
 
                             <div class="card-body">
+                                <span class="text-muted">Sort Order</span>
                                 <div class="form-group d-flex justify-content-between align-items-center">
 
                                     <input type="number" name="sort_order" value="{{ $banner->sort_order }}"
                                         class="form-control" min="0">
                                 </div>
+                            </div>
+
+                            <div class="card-body">
+                                <span class="text-muted">Display Duration (in seconds)</span>
+                                <div class="form-group d-flex justify-content-between align-items-center">
+
+                                    <input type="number" name="display_duration" value="{{ $banner->display_duration }}"
+                                        class="form-control" min="1" placeholder="Enter duration in seconds">
+                                </div>
+                                <small class="text-muted">
+                                    Specify how long this banner should be displayed before switching to the next banner.
+                                </small>
                             </div>
                         </div>
 

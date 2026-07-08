@@ -21,6 +21,8 @@ class StoreBannerController extends AdminController
             ->select([
                 'id',
                 'media',
+                'url',
+                'display_duration',
                 'status',
                 'sort_order',
                 'created_at'
@@ -46,7 +48,10 @@ class StoreBannerController extends AdminController
 
                 return '<img src="'.$url.'" width="120">';
             })
-            ->rawColumns(['preview'])
+            ->addColumn('display_duration', function ($row) {
+                return $row->display_duration . ' seconds';
+            })
+            ->rawColumns(['preview', 'display_duration'])
             ->make();
     }
 
@@ -59,6 +64,8 @@ class StoreBannerController extends AdminController
     {
         $request->validate([
             'media' => 'required|file|mimes:jpg,jpeg,png,webp,mp4,webm|max:20480',
+            'url' => 'nullable|url',
+            'display_duration' => 'nullable|integer',
             'sort_order' => 'nullable|integer',
             'status' => 'nullable|in:0,1'
         ]);
@@ -72,6 +79,8 @@ class StoreBannerController extends AdminController
             Banner::create([
                 'type'       => 'store',
                 'media'      => $media,
+                'url'        => $request->url,
+                'display_duration' => $request->display_duration ?? 3,
                 'status'     => (int) $request->input('status', 1),
                 'sort_order' => $request->sort_order ?? 0,
             ]);
@@ -106,7 +115,9 @@ class StoreBannerController extends AdminController
 
         $request->validate([
             'media' => 'nullable|file|mimes:jpg,jpeg,png,webp,mp4,webm|max:20480',
-            'sort_order' => 'nullable|integer',
+            'url' => 'nullable|url',
+            'display_duration' => 'nullable|integer|min:1',
+            'sort_order' => 'nullable|integer|min:0',
             'status' => 'nullable|in:0,1'
         ]);
 
@@ -127,6 +138,8 @@ class StoreBannerController extends AdminController
                 $banner->media = $media;
             }
 
+            $banner->url = $request->url;
+            $banner->display_duration = $request->display_duration ?? 3;
             $banner->sort_order = $request->sort_order ?? 0;
             $banner->status     = (int) $request->input('status', 1);
 

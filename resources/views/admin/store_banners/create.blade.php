@@ -43,6 +43,18 @@
 
                                 <div id="mediaPreview" class="mt-3"></div>
 
+                                <div class="mt-4">
+                                    <label class="form-label fw-bold">
+                                        Banner URL
+                                    </label>
+
+                                    <input type="url" name="url" class="form-control"
+                                        placeholder="https://example.com">
+
+                                    <small class="text-muted">
+                                        Optional. Redirect URL for the banner.
+                                    </small>
+                                </div>
 
                             </div>
                         </div>
@@ -53,7 +65,7 @@
 
                         <div class="card">
                             <div class="card-header">
-                                <h4 class="card-title mb-0">Banner Status</h4>
+                                <h4 class="card-title mb-0">Banner Settings</h4>
                             </div>
 
                             <div class="card-body">
@@ -68,18 +80,24 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title mb-0">Sort Order</h4>
-                            </div>
 
                             <div class="card-body">
+                                <span class="text-muted">Sort Order</span>
                                 <div class="form-group d-flex justify-content-between align-items-center">
                                     <input type="number" name="sort_order" class="form-control" value="0"
                                         min="0">
                                 </div>
+                            </div>
+
+                            <div class="card-body">
+                                <span class="text-muted">Display Duration (in seconds)</span>
+                                <div class="form-group d-flex justify-content-between align-items-center">
+                                    <input type="number" name="display_duration" class="form-control" value="3"
+                                        min="1" placeholder="Enter duration in seconds">
+                                </div>
+                                <small class="text-muted">
+                                    Specify how long this banner should be displayed before switching to the next banner.
+                                </small>
                             </div>
                         </div>
 
