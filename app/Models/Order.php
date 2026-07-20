@@ -63,6 +63,7 @@ class Order extends Model
         'status',
         'paid_at',
         'cancelled_at',
+        'cancel_reason',
         'price_breakdown',
         'delivered_at'
     ];
@@ -89,9 +90,6 @@ class Order extends Model
         'sgst_amount' => 'float',
         'igst_amount' => 'float',
         
-        'wallet_used' => 'float',
-        'paid_amount' => 'float',
-        'total_amount' => 'float',
 
         // BOX
         'total_weight' => 'float',
@@ -163,17 +161,17 @@ class Order extends Model
                         'payment'
                     ]);
 
-                    if (!$order->user || !$order->user->email) {
-                        \Log::error('User email missing');
+                    if (!$order->email && (!$order->user || !$order->user->email)) {
+                        \Log::error('Order/User email missing');
                         return;
                     }
 
                     // Thank you mail
-                    Mail::to($order->user->email)
+                    Mail::to($order->email ?? $order->user->email)
                         ->send(new OrderThankYouMail($order));
 
                     // Order details mail
-                    Mail::to($order->user->email)
+                    Mail::to($order->email ?? $order->user->email)
                         ->send(new OrderDetailsMail($order));
 
                 } catch (\Exception $e) {
@@ -202,8 +200,8 @@ class Order extends Model
                         'walletTransactions'
                     ]);
 
-                    if (!$order->user || !$order->user->email) {
-                        \Log::error('User email missing');
+                    if (!$order->email && (!$order->user || !$order->user->email)) {
+                        \Log::error('Order/User email missing');
                         return;
                     }
 
@@ -217,7 +215,7 @@ class Order extends Model
                             ]);
                         }
 
-                        Mail::to($order->user->email)
+                        Mail::to($order->email ?? $order->user->email)
                             ->send(new OrderDeliveredMail($order));
 
                         \Log::info('Delivered mail sent', [
@@ -228,7 +226,7 @@ class Order extends Model
                     // ðŸ”¥ CANCEL MAIL
                     if ($order->status === 'cancelled') {
 
-                        Mail::to($order->user->email)
+                        Mail::to($order->email ?? $order->user->email)
                             ->send(new OrderCancelledMail($order));
 
                         \Log::info('Cancel mail sent', [

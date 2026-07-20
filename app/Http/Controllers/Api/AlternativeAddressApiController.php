@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\users;
+use App\Models\User;
 use App\Models\AlternativeAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +26,7 @@ class AlternativeAddressApiController extends Controller
     {
         $request->validate([
             'name'               => 'required|string|max:255',
-            'email'             => 'nullable|email|max:255',
+            'email'              => 'required|email|max:255',
             'country_code'       => 'required|string|max:5',
             'mobile'             => 'required|string|max:20',
             'alternative_mobile' => 'nullable|string|max:20',
@@ -61,6 +61,29 @@ class AlternativeAddressApiController extends Controller
             'by_default'         => $request->by_default ?? 0,
         ]);
 
+        $user = $request->user();
+
+        $updateData = [];
+
+        if (
+            empty($user->name) ||
+            $user->name === 'User ' . substr($user->mobile, -4)
+        ) {
+            $updateData['name'] = $request->name;
+        }
+
+        if (
+            (empty($user->email) ||
+            $user->email === 'user' . $user->mobile . '@astrotring.shop')
+            && !empty($request->email)
+        ) {
+            $updateData['email'] = strtolower($request->email);
+        }
+
+        if (!empty($updateData)) {
+            $user->update($updateData);
+        }
+
         return response()->json([
             'status' => true,
             'message' => 'Address added successfully',
@@ -88,7 +111,7 @@ class AlternativeAddressApiController extends Controller
 
         $request->validate([
             'name'               => 'required|string|max:255',
-            'email'             => 'nullable|email|max:255',
+            'email'              => 'required|email|max:255',
             'country_code'       => 'required|string|max:5',
             'mobile'             => 'required|string|max:20',
             'alternative_mobile' => 'nullable|string|max:20',
@@ -110,7 +133,7 @@ class AlternativeAddressApiController extends Controller
 
         $address->update([
             'name'               => $request->name,
-            'email'             => $request->email,
+            'email'              => $request->email,
             'country_code'       => $request->country_code ?? '+91',
             'mobile'             => $request->mobile,
             'alternative_mobile' => $request->alternative_mobile,

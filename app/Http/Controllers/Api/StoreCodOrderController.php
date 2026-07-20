@@ -138,6 +138,12 @@ class StoreCodOrderController extends Controller
                     throw new \Exception('Invalid coupon');
                 }
 
+                if (!in_array($coupon->payment_type, ['cod', 'both'])) {
+                    throw new \Exception(
+                        'This coupon is applicable only for prepaid orders'
+                    );
+                }
+
                 if (
                     $coupon->min_amount &&
                     $subtotal < $coupon->min_amount
@@ -657,8 +663,15 @@ class StoreCodOrderController extends Controller
         ]);
     }
     
-    public function cancelCodOrder($id)
+    public function cancelCodOrder(Request $request, $id)
     {
+        $request->validate([
+            'cancel_reason' => 'required|array|min:1',
+            'cancel_reason.*' => 'string|max:255',
+        ]);
+
+        $cancelReason = implode(', ', $request->cancel_reason);
+
         DB::beginTransaction();
     
         try {
@@ -732,10 +745,13 @@ class StoreCodOrderController extends Controller
             $order->update([
                 'status' => 'cancelled',
                 'shipping_status' => 'cancelled',
-                'cancelled_at' => now()
+                'cancelled_at' => now(),
+                'cancel_reason' => $cancelReason,
             ]);
     
             DB::commit();
+
+            $order->refresh();
     
             return response()->json([
                 'status' => true,
@@ -743,7 +759,8 @@ class StoreCodOrderController extends Controller
                 'order' => [
                     'order_id' => $order->id,
                     'order_number' => $order->order_number,
-                    'status' => 'cancelled'
+                    'status' => 'cancelled',
+                    'cancel_reason'  => $order->cancel_reason,
                 ]
             ]);
     

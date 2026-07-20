@@ -954,8 +954,15 @@ class StoreRazorpayPaymentController extends Controller
         }
     }
 
-    public function cancelOrder($id)
+    public function cancelOrder(Request $request, $id)
     {
+        $request->validate([
+            'cancel_reason' => 'required|array|min:1',
+            'cancel_reason.*' => 'string|max:255',
+        ]);
+
+        $cancelReason = implode(', ', $request->cancel_reason);
+
         DB::beginTransaction();
 
         try {
@@ -1062,7 +1069,7 @@ class StoreRazorpayPaymentController extends Controller
                     'quantity' => $item->quantity,
                     'refund_amount' => round($itemRefund, 2),
                     'cancelled_at' => now(),
-                    'reason' => 'Order cancelled'
+                    'reason' => $cancelReason
                 ]);
             }
 
@@ -1084,10 +1091,13 @@ class StoreRazorpayPaymentController extends Controller
             $order->update([
                 'status' => 'cancelled',
                 'shipping_status' => 'cancelled',
-                'cancelled_at' => now()
+                'cancelled_at' => now(),
+                'cancel_reason' => $cancelReason,
             ]);
 
             DB::commit();
+
+            $order->refresh();
 
             return response()->json([
                 'status' => true,
@@ -1098,6 +1108,8 @@ class StoreRazorpayPaymentController extends Controller
                     'wallet_before' => $before,
                     'wallet_after' => $after
                 ],
+
+                'cancel_reason' => $order->cancel_reason,
 
                 // ðŸ”¥ ADD THIS
                 'pricing' => $order->price_breakdown
