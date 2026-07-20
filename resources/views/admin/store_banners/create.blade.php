@@ -28,20 +28,47 @@
                         <div class="card mb-3">
                             <div class="card-body">
 
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">
-                                        Upload Media <sup class="text-danger">*</sup>
-                                    </label>
+                                <div class="row">
 
-                                    <input type="file" name="media" id="mediaInput" class="form-control"
-                                        accept="image/*,video/mp4,video/webm" required>
+                                    <div class="col-md-6">
 
-                                    <small class="text-muted">
-                                        Allowed: JPG, PNG, WEBP, MP4, WEBM (Max 20MB)
-                                    </small>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                Desktop Banner <sup class="text-danger">*</sup>
+                                            </label>
+
+                                            <input type="file" name="desktop_media" id="desktopMediaInput"
+                                                class="form-control" accept="image/*" required>
+
+                                            <small class="text-muted">
+                                                Recommended: 1920 × 600 (JPG, PNG, WEBP)
+                                            </small>
+                                        </div>
+
+                                        <div id="desktopPreview"></div>
+
+                                    </div>
+
+                                    <div class="col-md-6">
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                Mobile Banner <sup class="text-danger">*</sup>
+                                            </label>
+
+                                            <input type="file" name="mobile_media" id="mobileMediaInput"
+                                                class="form-control" accept="image/*" required>
+
+                                            <small class="text-muted">
+                                                Recommended: 1080 × 1350 (JPG, PNG, WEBP)
+                                            </small>
+                                        </div>
+
+                                        <div id="mobilePreview"></div>
+
+                                    </div>
+
                                 </div>
-
-                                <div id="mediaPreview" class="mt-3"></div>
 
                                 <div class="mt-4">
                                     <label class="form-label fw-bold">
@@ -121,35 +148,30 @@
     <script>
         $(document).ready(function() {
 
-            $('#mediaInput').on('change', function(e) {
+            function previewImage(inputId, previewId) {
 
-                let file = e.target.files[0];
-                let preview = $('#mediaPreview');
-                preview.html('');
+                $(inputId).on('change', function(e) {
 
-                if (!file) return;
+                    let file = e.target.files[0];
 
-                let url = URL.createObjectURL(file);
+                    if (!file) return;
 
-                if (file.type.startsWith('video/')) {
+                    let url = URL.createObjectURL(file);
 
-                    preview.html(`
+                    $(previewId).html(`
                         <label class="form-label fw-bold mt-2">Preview</label><br>
-                        <video width="300" controls>
-                            <source src="${url}">
-                        </video>
+
+                        <img src="${url}"
+                            class="img-fluid rounded border"
+                            style="max-height:200px;">
                     `);
 
-                } else {
+                });
 
-                    preview.html(`
-                        <label class="form-label fw-bold mt-2">Preview</label><br>
-                        <img src="${url}" 
-                            width="300" 
-                            class="img-fluid rounded">
-                    `);
-                }
-            });
+            }
+
+            previewImage('#desktopMediaInput', '#desktopPreview');
+            previewImage('#mobileMediaInput', '#mobilePreview');
 
             $('#createBtn').click(function(e) {
                 e.preventDefault();
