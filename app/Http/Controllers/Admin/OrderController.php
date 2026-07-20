@@ -135,7 +135,7 @@ class OrderController extends Controller
             'awb_code' => trim($request->awb_code)
         ]);
 
-        Mail::to($order->user->email)
+        Mail::to($order->email ?? $order->user->email)
             ->send(new OrderDeliveryTrackMail($order));
 
         return back()->with(

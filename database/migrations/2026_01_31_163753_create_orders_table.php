@@ -76,6 +76,7 @@ return new class extends Migration
             $table->timestamp('paid_at')->nullable();
             $table->timestamp('delivered_at')->nullable();
             $table->timestamp('cancelled_at')->nullable();
+            $table->text('cancel_reason')->nullable();
 
             $table->json('price_breakdown')->nullable();
 
