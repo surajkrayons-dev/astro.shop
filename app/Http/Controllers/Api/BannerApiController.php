@@ -22,10 +22,16 @@ class BannerApiController extends Controller
 
                 return [
                     'id'               => $banner->id,
-                    'media_type'       => $banner->media['type'] ?? null,
-                    'media_url'        => isset($banner->media['path'])
-                        ? asset('storage/' . $banner->media['path'])
+                    'media_type'       => $banner->media['type'] ?? 'image',
+
+                    'desktop_media'    => !empty($banner->media['desktop'])
+                        ? asset('storage/' . $banner->media['desktop'])
                         : null,
+
+                    'mobile_media'     => !empty($banner->media['mobile'])
+                        ? asset('storage/' . $banner->media['mobile'])
+                        : null,
+
                     'url'              => $banner->url,
                     'display_duration' => $banner->display_duration,
                     'sort_order'       => $banner->sort_order,

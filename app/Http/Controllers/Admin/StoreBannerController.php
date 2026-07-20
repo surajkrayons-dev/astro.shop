@@ -35,16 +35,11 @@ class StoreBannerController extends AdminController
         return \DataTables::of($list)
             ->addColumn('preview', function ($row) {
 
-                if (!$row->media) return '-';
-
-                $media = $row->media;
-                $url = asset('storage/' . $media['path']);
-
-                if ($media['type'] === 'video') {
-                    return '<video width="120" height="70" controls>
-                                <source src="'.$url.'">
-                            </video>';
+                if (empty($row->media['desktop'])) {
+                    return '-';
                 }
+
+                $url = asset('storage/' . $row->media['desktop']);
 
                 return '<img src="'.$url.'" width="120">';
             })
@@ -63,7 +58,8 @@ class StoreBannerController extends AdminController
     public function postCreate(Request $request)
     {
         $request->validate([
-            'media' => 'required|file|mimes:jpg,jpeg,png,webp,mp4,webm|max:20480',
+            'desktop_media' => 'required|file|mimes:jpg,jpeg,png,webp|max:20480',
+            'mobile_media'  => 'required|file|mimes:jpg,jpeg,png,webp|max:20480',
             'url' => 'nullable|url',
             'display_duration' => 'nullable|integer',
             'sort_order' => 'nullable|integer',
@@ -74,7 +70,14 @@ class StoreBannerController extends AdminController
 
         try {
 
-            $media = uploadMedia('media', null, null, 'banners');
+            $desktop = uploadMedia('desktop_media', null, null, 'banners');
+            $mobile  = uploadMedia('mobile_media', null, null, 'banners');
+
+            $media = [
+                'type'    => 'image',
+                'desktop' => $desktop['path'],
+                'mobile'  => $mobile['path'],
+            ];
 
             Banner::create([
                 'type'       => 'store',
@@ -114,7 +117,8 @@ class StoreBannerController extends AdminController
         $banner = Banner::where('type','store')->findOrFail($id);
 
         $request->validate([
-            'media' => 'nullable|file|mimes:jpg,jpeg,png,webp,mp4,webm|max:20480',
+            'desktop_media' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:20480',
+            'mobile_media'  => 'nullable|file|mimes:jpg,jpeg,png,webp|max:20480',
             'url' => 'nullable|url',
             'display_duration' => 'nullable|integer|min:1',
             'sort_order' => 'nullable|integer|min:0',
@@ -125,18 +129,37 @@ class StoreBannerController extends AdminController
 
         try {
 
-            if ($request->hasFile('media')) {
+            $media = $banner->media ?? [];
 
-                $media = uploadMedia(
-                    'media',
+            if ($request->hasFile('desktop_media')) {
+
+                $desktop = uploadMedia(
+                    'desktop_media',
                     null,
                     null,
                     'banners',
-                    $banner->media['path'] ?? null
+                    $media['desktop'] ?? null
                 );
 
-                $banner->media = $media;
+                $media['desktop'] = $desktop['path'];
             }
+
+            if ($request->hasFile('mobile_media')) {
+
+                $mobile = uploadMedia(
+                    'mobile_media',
+                    null,
+                    null,
+                    'banners',
+                    $media['mobile'] ?? null
+                );
+
+                $media['mobile'] = $mobile['path'];
+            }
+
+            $media['type'] = 'image';
+
+            $banner->media = $media;
 
             $banner->url = $request->url;
             $banner->display_duration = $request->display_duration ?? 3;
@@ -166,8 +189,19 @@ class StoreBannerController extends AdminController
     {
         $banner = Banner::where('type','store')->findOrFail($request->id);
 
-        if ($banner->media && isset($banner->media['path'])) {
-            $path = public_path('storage/' . $banner->media['path']);
+        if (!empty($banner->media['desktop'])) {
+
+            $path = public_path('storage/' . $banner->media['desktop']);
+
+            if (file_exists($path)) {
+                unlink($path);
+            }
+        }
+
+        if (!empty($banner->media['mobile'])) {
+
+            $path = public_path('storage/' . $banner->media['mobile']);
+
             if (file_exists($path)) {
                 unlink($path);
             }

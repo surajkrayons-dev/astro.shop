@@ -29,45 +29,70 @@
                         <div class="card mb-3">
                             <div class="card-body">
 
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">
-                                        Upload Media (Image / Video)
-                                    </label>
+                                <div class="row">
 
-                                    <input type="file" name="media" id="mediaInput" class="form-control">
+                                    <div class="col-md-6">
 
-                                    <small class="text-muted">
-                                        Allowed: JPG, PNG, WEBP, MP4, WEBM (Max 20MB)
-                                    </small>
-                                </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                Desktop Banner
+                                            </label>
 
-                                {{-- Existing Preview --}}
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Current Media</label>
+                                            <input type="file" name="desktop_media" id="desktopMediaInput"
+                                                class="form-control" accept="image/*">
 
-                                    <div id="existingPreview">
-                                        @if ($banner->media)
+                                            <small class="text-muted">
+                                                Leave empty to keep existing desktop banner.
+                                            </small>
+                                        </div>
 
-                                            @php
-                                                $media = $banner->media;
-                                                $url = asset('storage/' . $media['path']);
-                                            @endphp
+                                        <label class="form-label fw-bold">Current Desktop Banner</label>
 
-                                            @if ($media['type'] === 'video')
-                                                <video width="300" controls>
-                                                    <source src="{{ $url }}">
-                                                </video>
+                                        <div id="desktopExistingPreview">
+                                            @if (!empty($banner->media['desktop']))
+                                                <img src="{{ asset('storage/' . $banner->media['desktop']) }}"
+                                                    class="img-fluid rounded border" style="max-height:220px;">
                                             @else
-                                                <img src="{{ $url }}" width="300" class="img-fluid rounded">
+                                                <p class="text-muted">No desktop banner.</p>
                                             @endif
-                                        @else
-                                            <p class="text-muted">No media uploaded.</p>
-                                        @endif
-                                    </div>
-                                </div>
+                                        </div>
 
-                                {{-- New Preview --}}
-                                <div id="newPreview" class="mt-3"></div>
+                                        <div id="desktopNewPreview" class="mt-3"></div>
+
+                                    </div>
+
+
+                                    <div class="col-md-6">
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                Mobile Banner
+                                            </label>
+
+                                            <input type="file" name="mobile_media" id="mobileMediaInput"
+                                                class="form-control" accept="image/*">
+
+                                            <small class="text-muted">
+                                                Leave empty to keep existing mobile banner.
+                                            </small>
+                                        </div>
+
+                                        <label class="form-label fw-bold">Current Mobile Banner</label>
+
+                                        <div id="mobileExistingPreview">
+                                            @if (!empty($banner->media['mobile']))
+                                                <img src="{{ asset('storage/' . $banner->media['mobile']) }}"
+                                                    class="img-fluid rounded border" style="max-height:220px;">
+                                            @else
+                                                <p class="text-muted">No mobile banner.</p>
+                                            @endif
+                                        </div>
+
+                                        <div id="mobileNewPreview" class="mt-3"></div>
+
+                                    </div>
+
+                                </div>
 
                                 <div class="mt-4">
                                     <label class="form-label fw-bold">
@@ -153,31 +178,34 @@
     <script>
         $(document).ready(function() {
 
-            // Preview new media (image/video)
-            $('#mediaInput').on('change', function(e) {
+            function previewImage(inputId, previewId) {
 
-                let file = e.target.files[0];
-                let preview = $('#newPreview');
-                preview.html('');
+                $(inputId).on('change', function(e) {
 
-                if (!file) return;
+                    let file = e.target.files[0];
 
-                let url = URL.createObjectURL(file);
+                    if (!file) return;
 
-                if (file.type.startsWith('video/')) {
-                    preview.html(`
-                <label class="form-label fw-bold mt-3">New Preview</label><br>
-                <video width="300" controls>
-                    <source src="${url}">
-                </video>
-            `);
-                } else {
-                    preview.html(`
-                <label class="form-label fw-bold mt-3">New Preview</label><br>
-                <img src="${url}" width="300" class="img-fluid rounded">
-            `);
-                }
-            });
+                    let url = URL.createObjectURL(file);
+
+                    $(previewId).html(`
+                        <label class="form-label fw-bold mt-3">
+                            New Preview
+                        </label>
+
+                        <br>
+
+                        <img src="${url}"
+                            class="img-fluid rounded border"
+                            style="max-height:220px;">
+                    `);
+
+                });
+
+            }
+
+            previewImage('#desktopMediaInput', '#desktopNewPreview');
+            previewImage('#mobileMediaInput', '#mobileNewPreview');
 
             // Update AJAX
             $('#updateBtn').click(function() {
