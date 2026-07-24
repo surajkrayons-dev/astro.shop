@@ -138,6 +138,12 @@ class StoreCodOrderController extends Controller
                     throw new \Exception('Invalid coupon');
                 }
 
+                if (!in_array($coupon->payment_type, ['cod', 'both'])) {
+                    throw new \Exception(
+                        'This coupon is applicable only for prepaid orders'
+                    );
+                }
+
                 if (
                     $coupon->min_amount &&
                     $subtotal < $coupon->min_amount
@@ -192,8 +198,15 @@ class StoreCodOrderController extends Controller
 
             $sellerState = 'Delhi';
 
-            $totalTax = 0;
-            $taxableAmount = 0;
+            $productTax = 0;
+            $productTaxableAmount = 0;
+
+            $shippingTax = 0;
+            $shippingTaxable = 0;
+
+            $codTax = 0;
+            $codTaxable = 0;
+
             $gstRate = 0;
 
             $hsnCodes = [];
@@ -210,24 +223,52 @@ class StoreCodOrderController extends Controller
                     $hsnCodes[] = $product->hsn_code;
                 }
 
-                $itemTaxableAmount = round(
-                    ($itemTotal * 100) / (100 + $itemGstRate),
-                    2
-                );
-
                 $itemTax = round(
-                    $itemTotal - $itemTaxableAmount,
+                    ($itemTotal * $itemGstRate) / 100,
                     2
                 );
 
-                $taxableAmount += $itemTaxableAmount;
+                $itemTaxableAmount = round(
+                    $itemTotal - $itemTax,
+                    2
+                );
 
-                $totalTax += $itemTax;
+                $productTax += $itemTax;
+                $productTaxableAmount += $itemTaxableAmount;
 
                 $gstRate = $itemGstRate;
             }
 
             $hsnCodes = array_unique($hsnCodes);
+
+            $shippingGstRate = 18;
+
+            $shippingTax = round(
+                ($deliveryCharge * $shippingGstRate) / 100,
+                2
+            );
+
+            $shippingTaxable = round(
+                $deliveryCharge - $shippingTax,
+                2
+            );
+
+            $codGstRate = 18;
+
+            $codTax = round(
+                ($codCharge * $codGstRate) / 100,
+                2
+            );
+
+            $codTaxable = round(
+                $codCharge - $codTax,
+                2
+            );
+
+            $taxableAmount =
+                $productTaxableAmount +
+                $shippingTaxable +
+                $codTaxable;
 
             $hsnCode = implode(',', $hsnCodes);
 
@@ -237,23 +278,59 @@ class StoreCodOrderController extends Controller
 
             $taxType = null;
 
+            $productCgstAmount = 0;
+            $productSgstAmount = 0;
+            $productIgstAmount = 0;
+
+            $shippingCgstAmount = 0;
+            $shippingSgstAmount = 0;
+            $shippingIgstAmount = 0;
+
+            $codCgstAmount = 0;
+            $codSgstAmount = 0;
+            $codIgstAmount = 0;
+
             if (
-                strtolower(trim($address->state))
-                ==
+                strtolower(trim($address->state)) ==
                 strtolower(trim($sellerState))
             ) {
 
                 $taxType = 'cgst_sgst';
 
-                $cgstAmount = round($totalTax / 2, 2);
-                $sgstAmount = round($totalTax / 2, 2);
+                $productCgstAmount = round($productTax / 2, 2);
+                $productSgstAmount = round($productTax / 2, 2);
+
+                $shippingCgstAmount = round($shippingTax / 2, 2);
+                $shippingSgstAmount = round($shippingTax / 2, 2);
+
+                $codCgstAmount = round($codTax / 2, 2);
+                $codSgstAmount = round($codTax / 2, 2);
 
             } else {
 
                 $taxType = 'igst';
 
-                $igstAmount = $totalTax;
+                $productIgstAmount = $productTax;
+
+                $shippingIgstAmount = $shippingTax;
+
+                $codIgstAmount = $codTax;
             }
+
+            $cgstAmount =
+                $productCgstAmount +
+                $shippingCgstAmount +
+                $codCgstAmount;
+
+            $sgstAmount =
+                $productSgstAmount +
+                $shippingSgstAmount +
+                $codSgstAmount;
+
+            $igstAmount =
+                $productIgstAmount +
+                $shippingIgstAmount +
+                $codIgstAmount;
 
             $payment = Payment::create([
                 'user_id' => $user->id,
@@ -325,8 +402,34 @@ class StoreCodOrderController extends Controller
                     'delivery_charge' => $deliveryCharge,
                     'cod_charge' => $codCharge,
                     'taxable_amount' => $taxableAmount,
+                    'product_gst_amount' => $productTax,
+                    'product_taxable_amount' => $productTaxableAmount,
+
+                    'shipping_gst_rate' => $shippingGstRate,
+                    'shipping_gst_amount' => $shippingTax,
+                    'shipping_taxable_amount' => $shippingTaxable,
+
+                    'cod_charge' => $codCharge,
+                    'cod_gst_rate' => $codGstRate,
+                    'cod_gst_amount' => $codTax,
+                    'cod_taxable_amount' => $codTaxable,
+
+                    'product_cgst_amount' => $productCgstAmount,
+                    'product_sgst_amount' => $productSgstAmount,
+                    'product_igst_amount' => $productIgstAmount,
+
+                    'shipping_cgst_amount' => $shippingCgstAmount,
+                    'shipping_sgst_amount' => $shippingSgstAmount,
+                    'shipping_igst_amount' => $shippingIgstAmount,
+
+                    'cod_cgst_amount' => $codCgstAmount,
+                    'cod_sgst_amount' => $codSgstAmount,
+                    'cod_igst_amount' => $codIgstAmount,
+
+                    'taxable_amount' => $taxableAmount,
                     'gst_rate' => $gstRate,
                     'tax_type' => $taxType,
+
                     'cgst_amount' => $cgstAmount,
                     'sgst_amount' => $sgstAmount,
                     'igst_amount' => $igstAmount,
@@ -334,7 +437,7 @@ class StoreCodOrderController extends Controller
                 ],
                 'address_id' => $address->id,
                 'name' => $address->name,
-                'email' => $user->email,
+                'email' => $address->email ?? $user->email,
                 'mobile' => $address->mobile,
                 'alternative_mobile' => $address->alternative_mobile,
                 'city' => $address->city,
@@ -411,6 +514,28 @@ class StoreCodOrderController extends Controller
                 $maxLength = max($maxLength, $product->length ?? 0);
                 $maxBreadth = max($maxBreadth, $product->breadth ?? 0);
                 $totalHeight += (($product->height ?? 0) * $item->quantity);
+                $itemGstRate = $product->gst_rate ?? 0;
+
+                $itemTax = round(
+                    ($item->total_price * $itemGstRate) / 100,
+                    2
+                );
+
+                $itemTaxableAmount = round(
+                    $item->total_price - $itemTax,
+                    2
+                );
+
+                $itemCgst = 0;
+                $itemSgst = 0;
+                $itemIgst = 0;
+
+                if ($taxType == 'cgst_sgst') {
+                    $itemCgst = round($itemTax / 2, 2);
+                    $itemSgst = round($itemTax / 2, 2);
+                } else {
+                    $itemIgst = $itemTax;
+                }
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item->product_id,
@@ -425,6 +550,16 @@ class StoreCodOrderController extends Controller
                     'length' => $product->length,
                     'breadth' => $product->breadth,
                     'height' => $product->height,
+                    'gst_rate' => $itemGstRate,
+                    'gst_amount' => $itemTax,
+                    'taxable_amount' => $itemTaxableAmount,
+
+                    'cgst_amount' => $itemCgst,
+                    'sgst_amount' => $itemSgst,
+                    'igst_amount' => $itemIgst,
+
+                    'tax_type' => $taxType,
+                    'hsn_code' => $product->hsn_code,
                 ]);
             }
 
@@ -455,14 +590,51 @@ class StoreCodOrderController extends Controller
                     'status' => $order->status,
                     'payment_status' => $payment->payment_status,
                     'payment_mode' => $payment->payment_mode,
-                    'pricing' => [
-                        'subtotal' => $subtotal,
-                        'discount' => $discount,
-                        'delivery_charge' => $deliveryCharge,
-                        'cod_charge' => $codCharge,
-                        'final_amount' => $finalAmount,
-                    ],
-                    'items' => $order->items
+                    'pricing' => $order->price_breakdown,
+                    'items' => $order->items->map(function ($item) {
+
+                        return [
+
+                            'product_id' => $item->product_id,
+
+                            'name' => $item->product_name,
+
+                            'slug' => $item->product_slug,
+
+                            'image' => $item->product_image,
+
+                            'quantity' => $item->quantity,
+
+                            'price' => $item->price,
+
+                            'total' => $item->total,
+
+                            'hsn_code' => $item->hsn_code,
+
+                            'gst_rate' => $item->gst_rate,
+
+                            'gst_amount' => $item->gst_amount,
+
+                            'taxable_amount' => $item->taxable_amount,
+
+                            'cgst_amount' => $item->cgst_amount,
+
+                            'sgst_amount' => $item->sgst_amount,
+
+                            'igst_amount' => $item->igst_amount,
+
+                            'tax_type' => $item->tax_type,
+
+                            'weight' => $item->weight,
+
+                            'length' => $item->length,
+
+                            'breadth' => $item->breadth,
+
+                            'height' => $item->height,
+                        ];
+
+                    }),
                 ]
             ]);
 
@@ -491,8 +663,15 @@ class StoreCodOrderController extends Controller
         ]);
     }
     
-    public function cancelCodOrder($id)
+    public function cancelCodOrder(Request $request, $id)
     {
+        $request->validate([
+            'cancel_reason' => 'required|array|min:1',
+            'cancel_reason.*' => 'string|max:255',
+        ]);
+
+        $cancelReason = implode(', ', $request->cancel_reason);
+
         DB::beginTransaction();
     
         try {
@@ -566,10 +745,13 @@ class StoreCodOrderController extends Controller
             $order->update([
                 'status' => 'cancelled',
                 'shipping_status' => 'cancelled',
-                'cancelled_at' => now()
+                'cancelled_at' => now(),
+                'cancel_reason' => $cancelReason,
             ]);
     
             DB::commit();
+
+            $order->refresh();
     
             return response()->json([
                 'status' => true,
@@ -577,7 +759,8 @@ class StoreCodOrderController extends Controller
                 'order' => [
                     'order_id' => $order->id,
                     'order_number' => $order->order_number,
-                    'status' => 'cancelled'
+                    'status' => 'cancelled',
+                    'cancel_reason'  => $order->cancel_reason,
                 ]
             ]);
     
