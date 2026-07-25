@@ -34,7 +34,17 @@ class DashboardController extends AdminController
             'total_orders' => Order::whereBetween('created_at', [$start, $end])
                 ->count(),
 
-            'pending_orders' => Order::where('status', 'pending')
+            'pending_orders' => Order::whereIn('status', ['pending', 'paid'])
+                ->whereBetween('created_at', [$start, $end])
+                ->count(),
+
+            'pending_cod' => Order::whereIn('status', ['pending', 'paid'])
+                ->whereNull('paid_at')
+                ->whereBetween('created_at', [$start, $end])
+                ->count(),
+
+            'pending_prepaid' => Order::whereIn('status', ['pending', 'paid'])
+                ->whereNotNull('paid_at')
                 ->whereBetween('created_at', [$start, $end])
                 ->count(),
 
@@ -194,19 +204,33 @@ class DashboardController extends AdminController
             'cancelled' => 'cancelled_at',
         ];
 
-        $result = [];
+        $statuses = [];
         foreach ($dateColumnByStatus as $status => $dateColumn) {
             $count = Order::where('status', $status)
                 ->whereBetween($dateColumn, [$start, $end])
                 ->count();
 
-            $result[] = [
+            $statuses[] = [
                 'status' => $status,
                 'count'  => $count,
             ];
         }
 
-        return response()->json($result);
+        $pendingBreakdown = [
+            'cod' => Order::where('status', 'pending')
+                ->whereNull('paid_at')
+                ->whereBetween('created_at', [$start, $end])
+                ->count(),
+            'prepaid' => Order::where('status', 'pending')
+                ->whereNotNull('paid_at')
+                ->whereBetween('created_at', [$start, $end])
+                ->count(),
+        ];
+
+        return response()->json([
+            'statuses' => $statuses,
+            'pending_breakdown' => $pendingBreakdown,
+        ]);
     }
 
     private function getDaysBetweenDates($start, $end)
