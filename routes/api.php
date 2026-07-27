@@ -162,13 +162,13 @@ Route::middleware(['auth:sanctum', 'session.timeout'])->group(function () {
 
     Route::prefix('store')->group(function () {
         // COD
-        // Route::post('/cod/create-order', [StoreCodOrderController::class, 'placeOrder']);
-        // Route::get('/cod-charge', [StoreCodOrderController::class, 'getCodCharge']);
-        // Route::post('/cod/cancel/{id}', [StoreCodOrderController::class, 'cancelCodOrder']);
-        Route::post('/cod/create-order', [StoreCodOrderController::class, 'createCodOrder']);
-        Route::post('/cod/verify-payment', [StoreCodOrderController::class, 'verifyCodPayment']);
+        Route::post('/cod/create-order', [StoreCodOrderController::class, 'placeOrder']);
         Route::get('/cod-charge', [StoreCodOrderController::class, 'getCodCharge']);
         Route::post('/cod/cancel/{id}', [StoreCodOrderController::class, 'cancelCodOrder']);
+        // Route::post('/cod/create-order', [StoreCodOrderController::class, 'createCodOrder']);
+        // Route::post('/cod/verify-payment', [StoreCodOrderController::class, 'verifyCodPayment']);
+        // Route::get('/cod-charge', [StoreCodOrderController::class, 'getCodCharge']);
+        // Route::post('/cod/cancel/{id}', [StoreCodOrderController::class, 'cancelCodOrder']);
         // Razorpay
         Route::post('/create-order', [StoreRazorpayPaymentController::class, 'createOrder']);
         Route::post('/verify-payment', [StoreRazorpayPaymentController::class, 'verify']);
