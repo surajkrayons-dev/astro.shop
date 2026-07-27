@@ -44,6 +44,6 @@ return [
         'template_id' => env('SMS_TEMPLATE_ID'),
     ],
 
-    'cod_charge' => env('COD_CHARGE', 49),
+    'cod_charge' => env('COD_CHARGE', 75),
     'cod_advance_amount' => env('COD_ADVANCE_AMOUNT', 99),
 ];
