@@ -53,23 +53,35 @@ class OrderController extends Controller
             ->latest();
 
         return datatables()->of($orders)
-            ->addColumn('order_no', fn ($o) => $o->order_number)
+            ->addColumn('order_no', function ($o) {
+                return \Illuminate\Support\Str::limit($o->order_number, 10);
+            })
 
             ->addColumn('user', function ($o) {
-                return '[ <b>'.$o->user->code.'</b> ]<br>'.$o->user->name;
+                $code = \Illuminate\Support\Str::limit($o->user->code, 10);
+                $name = \Illuminate\Support\Str::limit($o->user->name, 10);
+        
+                return '[ <b>'.$code.'</b> ]<br>'.$name;
             })
+            
             ->addColumn('category', function ($o) {
+            
                 return $o->items
                     ->pluck('product.category.name')
                     ->unique()
+                    ->map(function ($name) {
+                        return \Illuminate\Support\Str::limit($name, 10);
+                    })
                     ->implode(', ');
             })
+            
             ->addColumn('products', function ($order) {
                 return $order->items->map(function ($item) {
-                    $name = \Illuminate\Support\Str::limit($item->product_name, 20);
+                    $name = \Illuminate\Support\Str::limit($item->product_name, 10);
                     return '<div class="mb-1">'.$name.'</div>';
                 })->implode('');
             })
+            
             ->addColumn('items_count', function ($order) {
                 return '<span class="fw-bold">'.$order->items->count().'</span>';
             })
@@ -82,6 +94,7 @@ class OrderController extends Controller
                     'shipped'   => '<span class="badge bg-dark">Shipped</span>',
                     'delivered' => '<span class="badge bg-success">Delivered</span>',
                     'cancelled' => '<span class="badge bg-danger">Cancelled</span>',
+                    'rto'       => '<span class="badge bg-dark text-warning">RTO</span>',
                     default     => $o->status
                 };
             })

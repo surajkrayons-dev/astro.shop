@@ -8,6 +8,7 @@
         'shipped' => 'dark',
         'delivered' => 'success',
         'cancelled' => 'danger',
+        'rto'       => 'dark text-warning',
         default => 'secondary',
     };
 @endphp
