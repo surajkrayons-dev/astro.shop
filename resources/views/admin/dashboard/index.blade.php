@@ -608,10 +608,9 @@ function loadStats(start, end) {
         });
 }
 
-const pipelineOrder = ['pending', 'paid', 'packed', 'shipped', 'delivered'];
+const pipelineOrder = ['pending', 'packed', 'shipped', 'delivered'];
 const pipelineMeta = {
     pending:   { label: 'Pending',   icon: 'fa-hourglass-half', color: '#6c757d' },
-    paid:      { label: 'Paid',      icon: 'fa-credit-card',    color: '#0dcaf0' },
     packed:    { label: 'Packed',    icon: 'fa-box',            color: '#0d6efd' },
     shipped:   { label: 'Shipped',   icon: 'fa-truck',          color: '#212529' },
     delivered: { label: 'Delivered', icon: 'fa-check-circle',   color: '#198754' },

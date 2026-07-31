@@ -104,7 +104,7 @@
                                     Products
                                     <div class="text-muted small">(Items)</div>
                                 </th>
-                                <th>Total Amount</th>
+                                <th>Amount</th>
                                 <th>Status</th>
                                 <th>Date</th>
                                 <th>Action</th>

@@ -193,7 +193,7 @@ class DashboardController extends AdminController
     {
         $start = Carbon::parse($request->start_date)->startOfDay();
         $end   = Carbon::parse($request->end_date)->endOfDay();
-
+    
         $dateColumnByStatus = [
             'pending'   => 'created_at',
             'paid'      => 'created_at',
@@ -203,30 +203,37 @@ class DashboardController extends AdminController
             'delivered' => 'delivered_at',
             'cancelled' => 'cancelled_at',
         ];
-
+    
         $statuses = [];
         foreach ($dateColumnByStatus as $status => $dateColumn) {
-            $count = Order::where('status', $status)
-                ->whereBetween($dateColumn, [$start, $end])
-                ->count();
-
+    
+            if ($status === 'pending') {
+                $count = Order::whereIn('status', ['pending', 'paid'])
+                    ->whereBetween($dateColumn, [$start, $end])
+                    ->count();
+            } else {
+                $count = Order::where('status', $status)
+                    ->whereBetween($dateColumn, [$start, $end])
+                    ->count();
+            }
+    
             $statuses[] = [
                 'status' => $status,
                 'count'  => $count,
             ];
         }
-
+    
         $pendingBreakdown = [
-            'cod' => Order::where('status', 'pending')
+            'cod' => Order::whereIn('status', ['pending', 'paid'])
                 ->whereNull('paid_at')
                 ->whereBetween('created_at', [$start, $end])
                 ->count(),
-            'prepaid' => Order::where('status', 'pending')
+            'prepaid' => Order::whereIn('status', ['pending', 'paid'])
                 ->whereNotNull('paid_at')
                 ->whereBetween('created_at', [$start, $end])
                 ->count(),
         ];
-
+    
         return response()->json([
             'statuses' => $statuses,
             'pending_breakdown' => $pendingBreakdown,
