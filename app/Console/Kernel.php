@@ -10,6 +10,7 @@ class Kernel extends ConsoleKernel
 
     protected $commands = [
         \App\Console\Commands\GenerateClientPayouts::class,
+        \App\Console\Commands\DeleteScheduledFiles::class,
     ];
 
     /**
@@ -18,6 +19,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('sync:shipway')->everyFiveMinutes();
+        $schedule->command('app:delete-scheduled-files')->daily();
     }
 
     /**
