@@ -56,6 +56,7 @@ class Product extends Model
         'stock_status',
 
         'image',
+        'is_bestseller',
         'status'
     ];
 
@@ -75,6 +76,7 @@ class Product extends Model
         'rating_avg' => 'float',
         'rating_count' => 'integer',
         'stock_qty' => 'integer',
+        'is_bestseller' => 'boolean',
         'status' => 'boolean',
     ];
 

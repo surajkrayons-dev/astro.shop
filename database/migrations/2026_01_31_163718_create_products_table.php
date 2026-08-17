@@ -63,6 +63,7 @@ return new class extends Migration
             $table->enum('stock_status', ['in_stock', 'few_left', 'out_of_stock'])
                 ->default('in_stock');
             $table->string('image')->nullable();
+            $table->boolean('is_bestseller')->default(0);
             $table->boolean('status')->default(1);
             $table->timestamps();
             $table->softDeletes();
