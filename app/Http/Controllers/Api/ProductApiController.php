@@ -180,4 +180,18 @@ class ProductApiController extends Controller
             'message' => 'Removed from wishlist'
         ]);
     }
+
+    public function bestseller ()
+    {
+        $products = Product::with(['category', 'images'])
+            ->where('status', 1)
+            ->where('is_bestseller', 1)
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $products->map(fn($p) => $this->fullProduct($p))
+        ]);
+    }
 }

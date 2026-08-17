@@ -76,22 +76,24 @@ class DashboardController extends AdminController
 
     public function getSalesGraph(Request $request)
     {
-        $start = Carbon::parse($request->start_date)->startOfDay()->toDateString();
-        $end   = Carbon::parse($request->end_date)->endOfDay()->toDateString();
+        $start = Carbon::parse($request->start_date)->startOfDay();
+        $end   = Carbon::parse($request->end_date)->endOfDay();
 
-        $dates = $this->getDaysBetweenDates($start, $end);
+        $startDate = $start->toDateString();
+        $endDate   = $end->toDateString();
+
+        $dates = $this->getDaysBetweenDates($startDate, $endDate);
 
         $orders = Order::selectRaw("COUNT(id) as total, DATE(created_at) as date")
-            ->whereDate('created_at', '>=', $start)
-            ->whereDate('created_at', '<=', $end)
+            ->whereBetween('created_at', [$start, $end])
             ->groupBy('date')
             ->pluck('total', 'date')
             ->toArray();
 
-        $revenues = Order::selectRaw("SUM(paid_amount) as total, DATE(created_at) as date")
-            ->where('status', '!=', 'cancelled')
-            ->whereDate('created_at', '>=', $start)
-            ->whereDate('created_at', '<=', $end)
+        $revenues = Order::selectRaw("SUM(paid_amount) as total, DATE(paid_at) as date")
+            ->whereNotIn('status', ['cancelled', 'rto'])
+            ->whereNotNull('paid_at')
+            ->whereBetween('paid_at', [$start, $end])
             ->groupBy('date')
             ->pluck('total', 'date')
             ->toArray();
@@ -103,8 +105,10 @@ class DashboardController extends AdminController
         foreach ($dates['dates'] as $date) {
             $normalized = Carbon::parse($date)->toDateString();
 
-            $labels[]      = $normalized;
-            $orderData[]   = (int) ($orders[$normalized] ?? 0);
+            $labels[] = $normalized;
+
+            $orderData[] = (int) ($orders[$normalized] ?? 0);
+
             $revenueData[] = (float) ($revenues[$normalized] ?? 0);
         }
 
@@ -197,8 +201,8 @@ class DashboardController extends AdminController
         $dateColumnByStatus = [
             'pending'   => 'created_at',
             'paid'      => 'created_at',
-            'packed'    => 'created_at',
-            'shipped'   => 'created_at',
+            'packed'    => 'updated_at',
+            'shipped'   => 'updated_at',
             'rto'       => 'rto_at',
             'delivered' => 'delivered_at',
             'cancelled' => 'cancelled_at',

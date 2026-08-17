@@ -98,6 +98,7 @@ Route::get('/categories/{slug}', [CategoryApiController::class, 'show']);
 
 // PRODUCTS
 Route::get('/products', [ProductApiController::class, 'index']);
+Route::get('/products/bestseller', [ProductApiController::class, 'bestseller']);
 
 // COUPONS
 // Route::post('coupon/apply', [CouponApiController::class, 'apply']);
